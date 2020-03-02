@@ -14,6 +14,8 @@ import Html exposing (Attribute, Html, a, br, div, i, img, input, main_, option,
 import Html.Attributes exposing (attribute, class, href, id, placeholder, rel, src, style, type_)
 import Html.Events exposing (onClick, onMouseLeave, onMouseOver)
 import SmoothScroll exposing (Config, scrollTo, scrollToWithOptions)
+import Svg as Svg
+import Svg.Attributes as SvgAttributes
 import Task
 import Url
 import Url.Parser as Url exposing ((</>), Parser)
@@ -44,6 +46,7 @@ type alias Model =
     , key : Nav.Key
     , page : Page
     , hoveredNavbarItem : Int
+    , hoveredServiceItem : Int
     }
 
 
@@ -53,6 +56,7 @@ init flags url key =
       , key = key
       , page = urlToPage url
       , hoveredNavbarItem = 0
+      , hoveredServiceItem = 0
       }
     , Task.attempt (always <| DoNothing <| urlToPage url) (scrollTo <| pageToString <| urlToPage url)
     )
@@ -65,6 +69,7 @@ type Msg
     | NavbarClick Page
     | DoNothing Page
     | SetHoveredNavbarItem Int
+    | SetHoveredServiceItem Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -98,6 +103,11 @@ update msg model =
 
         SetHoveredNavbarItem n ->
             ( { model | hoveredNavbarItem = n }
+            , Cmd.none
+            )
+
+        SetHoveredServiceItem n ->
+            ( { model | hoveredServiceItem = n }
             , Cmd.none
             )
 
@@ -179,15 +189,15 @@ view : Model -> Browser.Document Msg
 view model =
     let
         body =
-            [ div [ style "backgroundColor" "black", style "height" "100%" ]
+            [ div [ gradient, style "height" "100%", style "color" "white" ]
                 [ stylesheet
                 , navbar model
                 , index
                 , about
-                , services
+                , services model
                 , portofolio
                 , contact
-                , exampleFooter
+                , myFooter
                 ]
             ]
     in
@@ -203,11 +213,16 @@ myNavbarModifier =
     }
 
 
+gradient : Attribute Msg
+gradient =
+    style "background" "linear-gradient(90deg, rgba(8,9,13,1) 0%, rgba(32,36,48,1) 100%)"
+
+
 navbar : Model -> Html Msg
 navbar model =
     fixedNavbar BM.Top
         myNavbarModifier
-        []
+        [ gradient ]
         [ navbarBrand [ style "margin-left" "1%" ]
             (navbarBurger False
                 []
@@ -287,71 +302,332 @@ navbarItemCss model setting =
 
 index : Html msg
 index =
-    section Spaced
-        [ id "index" ]
-        [ heroBody []
-            [ container []
-                [ title H1 [] [ text "Indagra srl" ]
-                , title H2 [] [ text "Give me money, pls." ]
+    section NotSpaced
+        [ id "index", style "background" "url('./indagra_index.jpg')", style "background-size" "100%" ]
+        [ container []
+            [ columns columnsModifiers
+                []
+                [ column sideColumnModifier verticalTextCss [ text "Protecție pasivă de foc din 1992" ]
+                , column centerColumnModifier [ style "height" "1000px" ] []
+                , column sideColumnModifier [] []
                 ]
             ]
+        ]
+
+
+titleLine : Html msg
+titleLine =
+    Svg.svg
+        [ SvgAttributes.width "150"
+        , SvgAttributes.height "3"
+        , SvgAttributes.viewBox "0 0 160 1"
+        , SvgAttributes.color "red"
+        ]
+        [ Svg.line
+            [ SvgAttributes.x1 "0"
+            , SvgAttributes.y1 "0"
+            , SvgAttributes.x2 "150"
+            , SvgAttributes.y2 "0"
+            , SvgAttributes.stroke "#FFFFFF"
+            , SvgAttributes.strokeWidth "3"
+            , SvgAttributes.strokeMiterlimit "10"
+            , SvgAttributes.fill "none"
+            ]
+            []
+        ]
+
+
+verticalLine : Html msg
+verticalLine =
+    Svg.svg
+        [ SvgAttributes.width "3"
+        , SvgAttributes.height "150"
+        , SvgAttributes.viewBox "0 0 3 150"
+        , SvgAttributes.color "red"
+        ]
+        [ Svg.line
+            [ SvgAttributes.x1 "0"
+            , SvgAttributes.y1 "0"
+            , SvgAttributes.x2 "0"
+            , SvgAttributes.y2 "150"
+            , SvgAttributes.stroke "#FFFFFF"
+            , SvgAttributes.strokeWidth "3"
+            , SvgAttributes.strokeMiterlimit "10"
+            , SvgAttributes.fill "none"
+            ]
+            []
+        ]
+
+
+verticalTextCss : List (Attribute msg)
+verticalTextCss =
+    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)" ]
+
+
+centerWidth : BM.Devices (Maybe BM.Width)
+centerWidth =
+    { mobile = Just BM.Width10
+    , tablet = Just BM.Width10
+    , desktop = Just BM.Width10
+    , widescreen = Just BM.Width10
+    , fullHD = Just BM.Width10
+    }
+
+
+centerColumnModifier : ColumnModifiers
+centerColumnModifier =
+    { offset = BM.Auto
+    , widths = centerWidth
+    }
+
+
+sideWidth : BM.Devices (Maybe BM.Width)
+sideWidth =
+    { mobile = Just BM.Width1
+    , tablet = Just BM.Width1
+    , desktop = Just BM.Width1
+    , widescreen = Just BM.Width1
+    , fullHD = Just BM.Width1
+    }
+
+
+sideColumnModifier : ColumnModifiers
+sideColumnModifier =
+    { offset = BM.Auto
+    , widths = sideWidth
+    }
+
+
+sectionTitle title =
+    div [ style "font-size" "48px", style "text-align" "left" ]
+        [ titleLine
+        , text title
         ]
 
 
 about : Html msg
 about =
-    section Spaced
-        [ id "about" ]
-        [ title H1 [] [ text "Despre noi" ]
-        ]
-
-
-services : Html msg
-services =
-    section Spaced
-        [ id "services" ]
-        [ title H1 [] [ text "Servicii" ]
-        ]
-
-
-portofolio : Html msg
-portofolio =
-    section Spaced
-        [ id "portofolio" ]
-        [ title H1 [] [ text "Portofoliu" ]
-        ]
-
-
-contact : Html msg
-contact =
-    section Spaced
-        [ id "contact" ]
-        [ title H1 [] [ text "Contact" ]
-        ]
-
-
-exampleColumns : Html msg
-exampleColumns =
     section NotSpaced
-        []
-        [ container []
-            [ columns columnsModifiers
-                []
-                [ column columnModifiers [] [ text "First Column" ]
-                , column columnModifiers [] [ text "Second Column" ]
-                , column columnModifiers [] [ text "Third Column" ]
+        [ id "about" ]
+        [ sectionTitle "DESPRE NOI"
+        , container [ style "width" "100%" ]
+            [ columns myColumnsModifiers
+                [ style "padding-top" "4rem" ]
+                [ column sideColumnModifier
+                    [ style "display" "flex", style "flex-direction" "row" ]
+                    [ div verticalTextCss [ text "Despre noi" ]
+                    , div [ style "padding-top" "200px" ] [ verticalLine ]
+                    ]
+                , column centerColumnModifier [] [ aboutText ]
+                , column sideColumnModifier [ style "display" "flex" ] [ tciLogo ]
                 ]
             ]
         ]
 
 
-exampleFooter : Html Msg
-exampleFooter =
-    footer []
+tciLogo : Html msg
+tciLogo =
+    div [ style "background-color" "white", style "width" "150px", style "border-radius" "10px", style "align-self" "flex-end" ] [ a [ href "https://www.totceiubesc.ro/listing/servicii/indagra-etansare-si-voprire-antifoc/", Html.Attributes.target "_blank" ] [ img [ src "./tci.png", style "margin" "0px" ] [] ] ]
+
+
+aboutText : Html msg
+aboutText =
+    div []
+        [ p [ style "padding-bottom" "2rem" ] [ text "INDAGRA este specializată în protecția pasivă la foc: termoprotecție cu vopsea termospumantă și torcret, precum și în producția de uși metalice. Cu peste 10 ani de experiență în domeniul de protecție pasivă la foc, firma asigură:" ]
+        , div [ style "width" "60vw", style "float" "right", style "text-align" "left" ]
+            [ p [ style "padding-bottom" "1rem" ] [ text "/ protecția cu vopsea termospumantă și torcret a structurilor din oțel împotriva incendiilor, " ]
+            , p [ style "padding-bottom" "1rem" ] [ text "/ etanșarea antifoc între compartimente a trecerilor de cabluri, " ]
+            , p [ style "padding-bottom" "1rem" ] [ text "/ țevi metalice, " ]
+            , p [ style "padding-bottom" "1rem" ] [ text "/  conducte din material plastic și tubulaturi de ventilație, " ]
+            , p [ style "padding-bottom" "15rem" ] [ text "/ confecționarea de uși metalice de dimensiuni standard și atipice cu termoizolație sau căptușite cu plumb împotriva radiațiilor. " ]
+            ]
+        ]
+
+
+services : Model -> Html Msg
+services model =
+    section Spaced
+        [ id "services" ]
+        [ sectionTitle "SERVICII"
+        , container []
+            [ columns myColumnsModifiers
+                [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0 ]
+                [ column sideColumnModifier verticalTextCss [ text "Servicii" ]
+                , column centerColumnModifier [] [ serviceBoxes model ]
+                , column sideColumnModifier [] []
+                ]
+            ]
+        ]
+
+
+serviceBoxes : Model -> Html Msg
+serviceBoxes model =
+    div [ style "display" "flex", style "flex-direction" "row" ]
+        [ div (boxCss model 1) [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ]
+        , div (boxCss model 2) [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ]
+        , div (boxCss model 3) [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ]
+        ]
+
+
+boxCss : Model -> Int -> List (Attribute Msg)
+boxCss model setting =
+    [ onMouseOver <| SetHoveredServiceItem setting
+    , if model.hoveredServiceItem == setting then
+        style "background-color" "#DB2E54"
+
+      else
+        style "background-color" "#141414"
+    , style "width" "22vw"
+    , style "height" "22vw"
+    , style "margin" "1vw"
+    , style "display" "flex"
+    , style "justify-content" "center"
+    , style "align-items" "center"
+    , style "padding" "20px"
+    , style "border-radius" "5px"
+    ]
+
+
+portofolio : Html msg
+portofolio =
+    section NotSpaced
+        [ id "portofolio" ]
+        [ sectionTitle "PORTOFOLIU"
+        , container []
+            [ columns myColumnsModifiers
+                [ style "padding-top" "4rem" ]
+                [ column sideColumnModifier verticalTextCss [ text "Portofoliu" ]
+                , column centerColumnModifier [] [ portofolioText ]
+                , column sideColumnModifier [] []
+                ]
+            ]
+        ]
+
+
+squareCss =
+    [ style "width" "400px"
+    , style "height" "400px"
+    , style "display" "flex"
+    , style "justify-content" "center"
+    , style "align-items" "center"
+    , style "font-size" "24px"
+    , style "background-color" "#14171F"
+    , style "margin-bottom" "200px"
+    , style "margin-top" "0px"
+    , style "padding" "100px"
+    ]
+
+
+projectsCss =
+    [ style "display" "flex"
+    , style "justify-content" "center"
+    , style "align-items" "left"
+    , style "flex-direction" "column"
+    , style "height" "400px"
+    , style "margin-bottom" "200px"
+    , style "text-align" "left"
+    , style "background-color" "#14171F"
+    ]
+
+
+portofolioText : Html msg
+portofolioText =
+    columns myColumnsModifiers
+        []
+        [ column columnModifiers
+            []
+            [ div squareCss [ text "LUCRĂRI DE TERMOPROTECȚIE CU VOPSEA TERMOSPUMANTĂ" ]
+            , div squareCss [ text "LUCRĂRI DE ETANȘARE ANTIFOC" ]
+            ]
+        , column columnModifiers
+            []
+            [ div projectsCss
+                [ p [] [ text "HOTEL TELEFERIC POIANA BRAȘOV" ]
+                , p [] [ text "HALA ERTEX BRAȘOV" ]
+                , p [] [ text "HALA KATADYN PREJMER" ]
+                , p [] [ text "HALA DIETAL CODLEA" ]
+                , p [] [ text "HALA REHOMA PITEȘTI" ]
+                , p [] [ text "GALERII AUCHAN TG. MUREȘ" ]
+                , p [] [ text "BCR SILVER MOUNTAIN POIANA BRAȘOV" ]
+                , p [] [ text "CLĂDIRE ONE CHARLES DE GAULLE BUCUREȘTI" ]
+                , p [] [ text "SPITALUL ONCOLOGIC BRAȘOV" ]
+                , p [] [ text "HALA RECOBOL BRAȘOV" ]
+                , p [] [ text "PARCĂRI SUPRATERANE PREDEAL" ]
+                ]
+            , div projectsCss
+                [ p [] [ text "KRONOSPAN BRAȘOV" ]
+                , p [] [ text "SPITALUL VICTOR GOMOIU BUCUREȘTI" ]
+                , p [] [ text "PARCARE REGINA MARIA BRAȘOV" ]
+                , p [] [ text "HALA DIETAL CODLEA" ]
+                , p [] [ text "HALA ZOLLNER SATU MARE" ]
+                , p [] [ text "HALA QUIN BRAȘOV" ]
+                , p [] [ text "CLĂDIRI DE BIROURI CORESI BUSSINES PARK BRAȘOV" ]
+                , p [] [ text "AUCHAN SATU MARE" ]
+                , p [] [ text "HALA RUBITECH PREJMER" ]
+                , p [] [ text "CLĂDIRE CARPATEX BRAȘOV" ]
+                , p [] [ text "AUTOLIV BRAȘOV, ROVINARI, REȘIȚA" ]
+                , p [] [ text "HALA BELLMAN BRAȘOV" ]
+                , p [] [ text "CENTRUL COMERCIAL SHOPPING CITY SIBIU" ]
+                , p [] [ text "SPITALUL SF. CONSTANTIN BRAȘOV" ]
+                ]
+            ]
+        ]
+
+
+myColumnsModifiers : ColumnsModifiers
+myColumnsModifiers =
+    { multiline = False
+    , gap = Gap0
+    , display = TabletAndBeyond
+    , centered = True
+    }
+
+
+contact : Html msg
+contact =
+    section NotSpaced
+        [ id "contact" ]
+        [ sectionTitle "CONTACT"
+        , container [ style "margin-top" "4rem" ]
+            [ columns myColumnsModifiers
+                []
+                [ column sideColumnModifier verticalTextCss [ text "Contact" ]
+                , column centerColumnModifier [] [ contactText ]
+                , column sideColumnModifier [] []
+                ]
+            ]
+        ]
+
+
+contactFieldCss =
+    [ style "font-size" "24px" ]
+
+
+contactDataCss =
+    [ style "font-size" "12px", style "margin-bottom" "4rem" ]
+
+
+contactText : Html msg
+contactText =
+    div []
+        [ p contactFieldCss [ text "ADRESĂ" ]
+        , p contactDataCss [ text "STR, MATEI BASARAB NR.12 BRAȘOV ROMÂNIA" ]
+        , p contactFieldCss [ text "TELEFON" ]
+        , p contactDataCss [ text "0741 264 821" ]
+        , p contactFieldCss [ text "FAX" ]
+        , p contactDataCss [ text "0268 475 896" ]
+        , p contactFieldCss [ text "E-MAIL" ]
+        , p contactDataCss [ text "info@indagrasrl.ro" ]
+        ]
+
+
+myFooter : Html Msg
+myFooter =
+    footer [ gradient ]
         [ container []
             [ content BM.Standard
                 [ BMT.textCentered ]
-                [ p [] [ strong [] [ text "Copyright © 2020 INDAGRA SRL" ] ] ]
+                [ p [ style "color" "white" ] [ text "Copyright © 2020 INDAGRA SRL" ] ]
             ]
         ]
 

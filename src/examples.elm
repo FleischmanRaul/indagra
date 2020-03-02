@@ -128,7 +128,7 @@ demoSection aSubtitle someAttrs someHtmls
       ]
     , column (myColumnModifiers Auto (Just Auto)) []
       someHtmls
-    ]
+    ]s
 
 exampleMediaObject : Html Msg
 exampleMediaObject
