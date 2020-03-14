@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import Browser.Dom as Dom
 import Browser.Navigation as Nav
 import Bulma.CDN exposing (..)
 import Bulma.Columns exposing (..)
@@ -70,6 +71,7 @@ type Msg
     | DoNothing Page
     | SetHoveredNavbarItem Int
     | SetHoveredServiceItem Int
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -110,6 +112,16 @@ update msg model =
             ( { model | hoveredServiceItem = n }
             , Cmd.none
             )
+
+        NoOp ->
+            ( model, Cmd.none )
+
+
+jumpToBottom : String -> Cmd Msg
+jumpToBottom id =
+    Dom.getViewportOf id
+        |> Task.andThen (\info -> Dom.setViewportOf id 0 info.scene.height)
+        |> Task.attempt (\_ -> NoOp)
 
 
 urlToPage : Url.Url -> Page
@@ -192,6 +204,7 @@ view model =
             [ div [ gradient, style "height" "100%", style "color" "white" ]
                 [ stylesheet
                 , navbar model
+                , position model
                 , index
                 , about
                 , services model
@@ -303,11 +316,11 @@ navbarItemCss model setting =
 index : Html msg
 index =
     section NotSpaced
-        [ id "index", style "background" "url('./indagra_index.jpg')", style "background-size" "100%" ]
+        [ id "index", style "background" "url('./indagra_index.jpg')", style "background-size" "100vw" ]
         [ container []
             [ columns columnsModifiers
                 []
-                [ column sideColumnModifier verticalTextCss [ text "Protecție pasivă de foc din 1992" ]
+                [ leftColumn "Protecție pasivă de foc din 1992"
                 , column centerColumnModifier [ style "height" "1000px" ] []
                 , column sideColumnModifier [] []
                 ]
@@ -359,9 +372,23 @@ verticalLine =
         ]
 
 
+filledCircle : Html msg
+filledCircle =
+    Svg.svg
+        [ SvgAttributes.width "30", SvgAttributes.height "30", SvgAttributes.viewBox "0 0 30 30", SvgAttributes.color "white" ]
+        [ Svg.circle [ SvgAttributes.cx "15", SvgAttributes.cy "15", SvgAttributes.r "4", SvgAttributes.stroke "#EEEEEE", SvgAttributes.fill "#EEEEEE" ] [] ]
+
+
+emptyCircle : Html msg
+emptyCircle =
+    Svg.svg
+        [ SvgAttributes.width "30", SvgAttributes.height "30", SvgAttributes.viewBox "0 0 30 30", SvgAttributes.color "white" ]
+        [ Svg.circle [ SvgAttributes.cx "15", SvgAttributes.cy "15", SvgAttributes.r "4", SvgAttributes.stroke "#EEEEEE", SvgAttributes.fill "none" ] [] ]
+
+
 verticalTextCss : List (Attribute msg)
 verticalTextCss =
-    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)" ]
+    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)", style "height" "250px" ]
 
 
 centerWidth : BM.Devices (Maybe BM.Width)
@@ -405,6 +432,10 @@ sectionTitle title =
         ]
 
 
+position model =
+    div [ style "position" "fixed", style "top" "45vh", style "right" "1vw", style "display" "flex", style "flex-direction" "column" ] [ emptyCircle, emptyCircle, filledCircle, emptyCircle, emptyCircle ]
+
+
 about : Html msg
 about =
     section NotSpaced
@@ -413,15 +444,20 @@ about =
         , container [ style "width" "100%" ]
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem" ]
-                [ column sideColumnModifier
-                    [ style "display" "flex", style "flex-direction" "row" ]
-                    [ div verticalTextCss [ text "Despre noi" ]
-                    , div [ style "padding-top" "200px" ] [ verticalLine ]
-                    ]
+                [ leftColumn "Despre noi"
                 , column centerColumnModifier [] [ aboutText ]
-                , column sideColumnModifier [ style "display" "flex" ] [ tciLogo ]
+                , column sideColumnModifier [ style "display" "flex", style "align-items" "center" ] [ tciLogo ]
                 ]
             ]
+        ]
+
+
+leftColumn : String -> Html msg
+leftColumn sectionName =
+    column sideColumnModifier
+        [ style "display" "flex", style "flex-direction" "row", style "align-items" "center" ]
+        [ div verticalTextCss [ text sectionName ]
+        , div [ style "display" "flex", style "height" "150px", style "margin-top" "150px" ] [ verticalLine ]
         ]
 
 
@@ -434,7 +470,7 @@ aboutText : Html msg
 aboutText =
     div []
         [ p [ style "padding-bottom" "2rem" ] [ text "INDAGRA este specializată în protecția pasivă la foc: termoprotecție cu vopsea termospumantă și torcret, precum și în producția de uși metalice. Cu peste 10 ani de experiență în domeniul de protecție pasivă la foc, firma asigură:" ]
-        , div [ style "width" "60vw", style "float" "right", style "text-align" "left" ]
+        , div [ style "width" "40vw", style "float" "right", style "text-align" "left" ]
             [ p [ style "padding-bottom" "1rem" ] [ text "/ protecția cu vopsea termospumantă și torcret a structurilor din oțel împotriva incendiilor, " ]
             , p [ style "padding-bottom" "1rem" ] [ text "/ etanșarea antifoc între compartimente a trecerilor de cabluri, " ]
             , p [ style "padding-bottom" "1rem" ] [ text "/ țevi metalice, " ]
@@ -452,7 +488,7 @@ services model =
         , container []
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0 ]
-                [ column sideColumnModifier verticalTextCss [ text "Servicii" ]
+                [ leftColumn "Servicii"
                 , column centerColumnModifier [] [ serviceBoxes model ]
                 , column sideColumnModifier [] []
                 ]
@@ -462,7 +498,7 @@ services model =
 
 serviceBoxes : Model -> Html Msg
 serviceBoxes model =
-    div [ style "display" "flex", style "flex-direction" "row" ]
+    div [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "justify-content" "center" ]
         [ div (boxCss model 1) [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ]
         , div (boxCss model 2) [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ]
         , div (boxCss model 3) [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ]
@@ -477,8 +513,8 @@ boxCss model setting =
 
       else
         style "background-color" "#141414"
-    , style "width" "22vw"
-    , style "height" "22vw"
+    , style "width" "18vw"
+    , style "height" "18vw"
     , style "margin" "1vw"
     , style "display" "flex"
     , style "justify-content" "center"
@@ -496,7 +532,7 @@ portofolio =
         , container []
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem" ]
-                [ column sideColumnModifier verticalTextCss [ text "Portofoliu" ]
+                [ leftColumn "Portofoliu"
                 , column centerColumnModifier [] [ portofolioText ]
                 , column sideColumnModifier [] []
                 ]
@@ -504,6 +540,7 @@ portofolio =
         ]
 
 
+squareCss : List (Attribute msg)
 squareCss =
     [ style "width" "400px"
     , style "height" "400px"
@@ -518,6 +555,7 @@ squareCss =
     ]
 
 
+projectsCss : List (Attribute msg)
 projectsCss =
     [ style "display" "flex"
     , style "justify-content" "center"
@@ -591,7 +629,7 @@ contact =
         , container [ style "margin-top" "4rem" ]
             [ columns myColumnsModifiers
                 []
-                [ column sideColumnModifier verticalTextCss [ text "Contact" ]
+                [ leftColumn "Contact"
                 , column centerColumnModifier [] [ contactText ]
                 , column sideColumnModifier [] []
                 ]
@@ -599,10 +637,12 @@ contact =
         ]
 
 
+contactFieldCss : List (Attribute msg)
 contactFieldCss =
     [ style "font-size" "24px" ]
 
 
+contactDataCss : List (Attribute msg)
 contactDataCss =
     [ style "font-size" "12px", style "margin-bottom" "4rem" ]
 
