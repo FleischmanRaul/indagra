@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Browser.Dom as Dom
@@ -14,6 +14,7 @@ import Ease
 import Html exposing (Attribute, Html, a, br, div, i, img, input, main_, option, p, small, span, strong, text)
 import Html.Attributes exposing (attribute, class, href, id, placeholder, rel, src, style, type_)
 import Html.Events exposing (onClick, onMouseLeave, onMouseOver)
+import InView as InView
 import SmoothScroll exposing (Config, scrollTo, scrollToWithOptions)
 import Svg as Svg
 import Svg.Attributes as SvgAttributes
@@ -48,18 +49,27 @@ type alias Model =
     , page : Page
     , hoveredNavbarItem : Int
     , hoveredServiceItem : Int
+    , inView : InView.State
     }
 
 
+port onScroll : (( Float, Float ) -> msg) -> Sub msg
+
+
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
+init _ url key =
+    let
+        ( inViewModel, inViewCmds ) =
+            InView.init [ "index", "about", "services", "portofolio", "contact" ]
+    in
     ( { menuOn = False
       , key = key
       , page = urlToPage url
       , hoveredNavbarItem = 0
       , hoveredServiceItem = 0
+      , inView = inViewModel
       }
-    , Task.attempt (always <| DoNothing <| urlToPage url) (scrollTo <| pageToString <| urlToPage url)
+    , Cmd.batch [ Task.attempt (always <| DoNothing <| urlToPage url) (scrollTo <| pageToString <| urlToPage url), Cmd.map InViewMsg inViewCmds ]
     )
 
 
@@ -72,6 +82,8 @@ type Msg
     | SetHoveredNavbarItem Int
     | SetHoveredServiceItem Int
     | NoOp
+    | OnScroll ( Float, Float )
+    | InViewMsg InView.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -115,6 +127,20 @@ update msg model =
 
         NoOp ->
             ( model, Cmd.none )
+
+        OnScroll ( x, y ) ->
+            ( { model | inView = InView.updateViewportOffset x y model.inView }
+            , Nav.pushUrl model.key <| pageToUrl <| getCurrentPage model
+            )
+
+        InViewMsg inViewMsg ->
+            let
+                ( inView, inViewCmds ) =
+                    InView.update inViewMsg model.inView
+            in
+            ( { model | inView = inView }
+            , Cmd.map InViewMsg inViewCmds
+            )
 
 
 jumpToBottom : String -> Cmd Msg
@@ -190,7 +216,10 @@ pageToUrl page =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Sub.batch
+        [ Sub.map InViewMsg <| InView.subscriptions model.inView
+        , onScroll OnScroll
+        ]
 
 
 
@@ -237,27 +266,31 @@ navbar model =
         myNavbarModifier
         [ gradient ]
         [ navbarBrand [ style "margin-left" "1%" ]
-            (navbarBurger False
-                []
-                [ span [] []
-                , span [] []
-                , span [] []
-                ]
-            )
+            (myNavbarBurger model.menuOn)
             [ navbarItem False
                 [ onClick <| NavbarClick Index ]
                 [ img [ src "./indagra_logo.svg" ] []
                 ]
+            , navbarItem False
+                [ onMouseLeave <| SetHoveredNavbarItem 0 ]
+                []
             ]
         , navbarEnd []
-            [ navbarItem False
-                [ onMouseLeave <| SetHoveredNavbarItem 0 ]
-                [ navbarItem False (navbarItemCss model aboutSetting) [ text "DESPRE NOI" ]
-                , navbarItem False (navbarItemCss model servicesSetting) [ text "SERVICII" ]
-                , navbarItem False (navbarItemCss model portofolioSetting) [ text "PORTOFOLIU" ]
-                , navbarItem False (navbarItemCss model contactSetting) [ text "CONTACT" ]
-                ]
+            [ navbarItem False (navbarItemCss model aboutSetting) [ text "DESPRE NOI" ]
+            , navbarItem False (navbarItemCss model servicesSetting) [ text "SERVICII" ]
+            , navbarItem False (navbarItemCss model portofolioSetting) [ text "PORTOFOLIU" ]
+            , navbarItem False (navbarItemCss model contactSetting) [ text "CONTACT" ]
             ]
+        ]
+
+
+myNavbarBurger : Bool -> Html Msg
+myNavbarBurger isMenuOpen =
+    navbarBurger isMenuOpen
+        [ style "height" "auto", href "", onClick TogleMenu ]
+        [ span [] []
+        , span [] []
+        , span [] []
         ]
 
 
@@ -316,12 +349,12 @@ navbarItemCss model setting =
 index : Html msg
 index =
     section NotSpaced
-        [ id "index", style "background" "url('./indagra_index.jpg')", style "background-size" "100vw" ]
+        [ id "index", style "background" "url('./indagra_index.png')", style "background-repeat" "no-repeat", style "background-size" "100vw" ]
         [ container []
             [ columns columnsModifiers
                 []
                 [ leftColumn "Protecție pasivă de foc din 1992"
-                , column centerColumnModifier [ style "height" "1000px" ] []
+                , column centerColumnModifier [ style "height" "800px" ] []
                 , column sideColumnModifier [] []
                 ]
             ]
@@ -425,6 +458,7 @@ sideColumnModifier =
     }
 
 
+sectionTitle : String -> Html msg
 sectionTitle title =
     div [ style "font-size" "48px", style "text-align" "left" ]
         [ titleLine
@@ -432,8 +466,48 @@ sectionTitle title =
         ]
 
 
+position : Model -> Html msg
 position model =
-    div [ style "position" "fixed", style "top" "45vh", style "right" "1vw", style "display" "flex", style "flex-direction" "column" ] [ emptyCircle, emptyCircle, filledCircle, emptyCircle, emptyCircle ]
+    let
+        order =
+            case model.page of
+                Index ->
+                    [ filledCircle, emptyCircle, emptyCircle, emptyCircle, emptyCircle ]
+
+                About ->
+                    [ emptyCircle, filledCircle, emptyCircle, emptyCircle, emptyCircle ]
+
+                Services ->
+                    [ emptyCircle, emptyCircle, filledCircle, emptyCircle, emptyCircle ]
+
+                Portofolio ->
+                    [ emptyCircle, emptyCircle, emptyCircle, filledCircle, emptyCircle ]
+
+                Contact ->
+                    [ emptyCircle, emptyCircle, emptyCircle, emptyCircle, filledCircle ]
+    in
+    div [ style "position" "fixed", style "top" "45vh", style "right" "1vw", style "display" "flex", style "flex-direction" "column" ] order
+
+
+getCurrentPage : Model -> Page
+getCurrentPage model =
+    if InView.check "index" model.inView == Just True then
+        Index
+
+    else if InView.check "about" model.inView == Just True then
+        About
+
+    else if InView.check "services" model.inView == Just True then
+        Services
+
+    else if InView.check "portofolio" model.inView == Just True then
+        Portofolio
+
+    else if InView.check "contact" model.inView == Just True then
+        Contact
+
+    else
+        Index
 
 
 about : Html msg
@@ -499,9 +573,9 @@ services model =
 serviceBoxes : Model -> Html Msg
 serviceBoxes model =
     div [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "justify-content" "center" ]
-        [ div (boxCss model 1) [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ]
-        , div (boxCss model 2) [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ]
-        , div (boxCss model 3) [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ]
+        [ div (boxCss model 1) [ div [] [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ], div [] [ img [ src "./lucrari_termoprotectie.svg" ] [] ] ]
+        , div (boxCss model 2) [ div [] [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ], div [] [ img [ src "./etansarea_penetratiilor.svg" ] [] ] ]
+        , div (boxCss model 3) [ div [] [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ], div [] [ img [ src "./montaj_usi.svg" ] [] ] ]
         ]
 
 
@@ -521,6 +595,7 @@ boxCss model setting =
     , style "align-items" "center"
     , style "padding" "20px"
     , style "border-radius" "5px"
+    , style "flex-direction" "column"
     ]
 
 
