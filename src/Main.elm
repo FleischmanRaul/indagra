@@ -1,5 +1,7 @@
 port module Main exposing (..)
 
+-- import Bulma.Classes as BC
+
 import Browser
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
@@ -62,7 +64,7 @@ init _ url key =
         ( inViewModel, inViewCmds ) =
             InView.init [ "index", "about", "services", "portofolio", "contact" ]
     in
-    ( { menuOn = False
+    ( { menuOn = True
       , key = key
       , page = urlToPage url
       , hoveredNavbarItem = 0
@@ -265,21 +267,21 @@ navbar model =
     fixedNavbar BM.Top
         myNavbarModifier
         [ gradient ]
-        [ navbarBrand [ style "margin-left" "1%" ]
+        [ navbarBrand []
             (myNavbarBurger model.menuOn)
             [ navbarItem False
                 [ onClick <| NavbarClick Index ]
                 [ img [ src "./indagra_logo.svg" ] []
                 ]
-            , navbarItem False
-                [ onMouseLeave <| SetHoveredNavbarItem 0 ]
-                []
             ]
-        , navbarEnd []
-            [ navbarItem False (navbarItemCss model aboutSetting) [ text "DESPRE NOI" ]
-            , navbarItem False (navbarItemCss model servicesSetting) [ text "SERVICII" ]
-            , navbarItem False (navbarItemCss model portofolioSetting) [ text "PORTOFOLIU" ]
-            , navbarItem False (navbarItemCss model contactSetting) [ text "CONTACT" ]
+        , navbarMenu model.menuOn
+            [ gradient ]
+            [ navbarEnd [ onMouseLeave <| SetHoveredNavbarItem 0 ]
+                [ navbarItem False (navbarItemCss model aboutSetting) [ text "DESPRE NOI" ]
+                , navbarItem False (navbarItemCss model servicesSetting) [ text "SERVICII" ]
+                , navbarItem False (navbarItemCss model portofolioSetting) [ text "PORTOFOLIU" ]
+                , navbarItem False (navbarItemCss model contactSetting) [ text "CONTACT" ]
+                ]
             ]
         ]
 
@@ -287,7 +289,7 @@ navbar model =
 myNavbarBurger : Bool -> Html Msg
 myNavbarBurger isMenuOpen =
     navbarBurger isMenuOpen
-        [ style "height" "auto", href "", onClick TogleMenu ]
+        [ style "height" "auto", href "", onClick TogleMenu, style "color" "white" ]
         [ span [] []
         , span [] []
         , span [] []
@@ -421,7 +423,7 @@ emptyCircle =
 
 verticalTextCss : List (Attribute msg)
 verticalTextCss =
-    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)", style "height" "250px" ]
+    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)", style "height" "250px", hideOnMobile ]
 
 
 centerWidth : BM.Devices (Maybe BM.Width)
@@ -460,10 +462,21 @@ sideColumnModifier =
 
 sectionTitle : String -> Html msg
 sectionTitle title =
-    div [ style "font-size" "48px", style "text-align" "left" ]
-        [ titleLine
-        , text title
+    div [ BMT.textSizeByDevice titleFontSize, style "display" "flex" ]
+        [ div [ hideOnMobile ] [ titleLine ]
+        , div [] [ text title ]
+        , div [ hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, style "align-items" "flex-end" ] [ titleLine ]
         ]
+
+
+titleFontSize : BM.Devices BMT.Size
+titleFontSize =
+    { mobile = BMT.Large
+    , tablet = BMT.Largest
+    , desktop = BMT.Largest
+    , widescreen = BMT.Largest
+    , fullHD = BMT.Largest
+    }
 
 
 position : Model -> Html msg
@@ -491,20 +504,17 @@ position model =
 
 getCurrentPage : Model -> Page
 getCurrentPage model =
-    if InView.check "index" model.inView == Just True then
-        Index
-
-    else if InView.check "about" model.inView == Just True then
-        About
-
-    else if InView.check "services" model.inView == Just True then
-        Services
+    if InView.check "contact" model.inView == Just True then
+        Contact
 
     else if InView.check "portofolio" model.inView == Just True then
         Portofolio
 
-    else if InView.check "contact" model.inView == Just True then
-        Contact
+    else if InView.check "services" model.inView == Just True then
+        Services
+
+    else if InView.check "about" model.inView == Just True then
+        About
 
     else
         Index
@@ -515,12 +525,12 @@ about =
     section NotSpaced
         [ id "about" ]
         [ sectionTitle "DESPRE NOI"
-        , container [ style "width" "100%" ]
+        , container []
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem" ]
                 [ leftColumn "Despre noi"
                 , column centerColumnModifier [] [ aboutText ]
-                , column sideColumnModifier [ style "display" "flex", style "align-items" "center" ] [ tciLogo ]
+                , column sideColumnModifier [] []
                 ]
             ]
         ]
@@ -531,27 +541,55 @@ leftColumn sectionName =
     column sideColumnModifier
         [ style "display" "flex", style "flex-direction" "row", style "align-items" "center" ]
         [ div verticalTextCss [ text sectionName ]
-        , div [ style "display" "flex", style "height" "150px", style "margin-top" "150px" ] [ verticalLine ]
+        , div [ style "display" "flex", style "height" "150px", style "margin-top" "150px", hideOnMobile ] [ verticalLine ]
         ]
+
+
+hideOnMobile =
+    BM.displayByDevice
+        { mobile = BM.Hidden
+        , tablet = BM.Flex
+        , desktop = BM.Flex
+        , widescreen = BM.Flex
+        , fullHD = BM.Flex
+        }
+
+
+hideOnWideScreen =
+    BM.displayByDevice
+        { mobile = BM.Flex
+        , tablet = BM.Hidden
+        , desktop = BM.Hidden
+        , widescreen = BM.Hidden
+        , fullHD = BM.Hidden
+        }
 
 
 tciLogo : Html msg
 tciLogo =
-    div [ style "background-color" "white", style "width" "150px", style "border-radius" "10px", style "align-self" "flex-end" ] [ a [ href "https://www.totceiubesc.ro/listing/servicii/indagra-etansare-si-voprire-antifoc/", Html.Attributes.target "_blank" ] [ img [ src "./tci.png", style "margin" "0px" ] [] ] ]
+    div [ style "background-color" "white", style "width" "100px", style "border-radius" "10px" ] [ a [ href "https://www.totceiubesc.ro/listing/servicii/indagra-etansare-si-voprire-antifoc/", Html.Attributes.target "_blank" ] [ img [ src "./tci.png", style "margin" "0px" ] [] ] ]
 
 
 aboutText : Html msg
 aboutText =
-    div []
+    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "flex-end", style "text-align" "left" ]
         [ p [ style "padding-bottom" "2rem" ] [ text "INDAGRA este specializată în protecția pasivă la foc: termoprotecție cu vopsea termospumantă și torcret, precum și în producția de uși metalice. Cu peste 10 ani de experiență în domeniul de protecție pasivă la foc, firma asigură:" ]
-        , div [ style "width" "40vw", style "float" "right", style "text-align" "left" ]
-            [ p [ style "padding-bottom" "1rem" ] [ text "/ protecția cu vopsea termospumantă și torcret a structurilor din oțel împotriva incendiilor, " ]
-            , p [ style "padding-bottom" "1rem" ] [ text "/ etanșarea antifoc între compartimente a trecerilor de cabluri, " ]
-            , p [ style "padding-bottom" "1rem" ] [ text "/ țevi metalice, " ]
-            , p [ style "padding-bottom" "1rem" ] [ text "/  conducte din material plastic și tubulaturi de ventilație, " ]
-            , p [ style "padding-bottom" "15rem" ] [ text "/ confecționarea de uși metalice de dimensiuni standard și atipice cu termoizolație sau căptușite cu plumb împotriva radiațiilor. " ]
-            ]
+        , div [ style "width" "40vw", style "text-align" "left", hideOnMobile, style "flex-direction" "column" ]
+            aboutTextEnum
+        , div [ style "width" "auto", style "text-align" "left", hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, style "flex-direction" "column" ]
+            aboutTextEnum
         ]
+
+
+aboutTextEnum : List (Html msg)
+aboutTextEnum =
+    [ p [ style "padding-bottom" "1rem" ] [ text "/ protecția cu vopsea termospumantă și torcret a structurilor din oțel împotriva incendiilor, " ]
+    , p [ style "padding-bottom" "1rem" ] [ text "/ etanșarea antifoc între compartimente a trecerilor de cabluri, " ]
+    , p [ style "padding-bottom" "1rem" ] [ text "/ țevi metalice, " ]
+    , p [ style "padding-bottom" "1rem" ] [ text "/ conducte din material plastic și tubulaturi de ventilație, " ]
+    , p [ style "padding-bottom" "3rem" ] [ text "/ confecționarea de uși metalice de dimensiuni standard și atipice cu termoizolație sau căptușite cu plumb împotriva radiațiilor. " ]
+    , tciLogo
+    ]
 
 
 services : Model -> Html Msg
@@ -561,21 +599,40 @@ services model =
         [ sectionTitle "SERVICII"
         , container []
             [ columns myColumnsModifiers
-                [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0 ]
+                [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0, style "display" "flex", style "align-items" "center" ]
                 [ leftColumn "Servicii"
-                , column centerColumnModifier [] [ serviceBoxes model ]
+                , column centerColumnModifier [] [ serviceBoxes model, serviceBoxesMobile model ]
                 , column sideColumnModifier [] []
                 ]
             ]
         ]
 
 
+isHiddenWidescreen : Attribute msg
+isHiddenWidescreen =
+    class "is-hidden-widescreen"
+
+
+isHiddenFullHD : Attribute msg
+isHiddenFullHD =
+    class "is-hidden-fullhd"
+
+
 serviceBoxes : Model -> Html Msg
 serviceBoxes model =
-    div [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "justify-content" "center" ]
+    div [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "justify-content" "center", hideOnMobile ]
         [ div (boxCss model 1) [ div [] [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ], div [] [ img [ src "./lucrari_termoprotectie.svg" ] [] ] ]
         , div (boxCss model 2) [ div [] [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ], div [] [ img [ src "./etansarea_penetratiilor.svg" ] [] ] ]
         , div (boxCss model 3) [ div [] [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ], div [] [ img [ src "./montaj_usi.svg" ] [] ] ]
+        ]
+
+
+serviceBoxesMobile : Model -> Html Msg
+serviceBoxesMobile model =
+    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "justify-content" "center", hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen ]
+        [ div (boxCssMobile model 1) [ div [] [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ], div [] [ img [ src "./lucrari_termoprotectie.svg" ] [] ] ]
+        , div (boxCssMobile model 2) [ div [] [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ], div [] [ img [ src "./etansarea_penetratiilor.svg" ] [] ] ]
+        , div (boxCssMobile model 3) [ div [] [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ], div [] [ img [ src "./montaj_usi.svg" ] [] ] ]
         ]
 
 
@@ -587,8 +644,28 @@ boxCss model setting =
 
       else
         style "background-color" "#141414"
-    , style "width" "18vw"
-    , style "height" "18vw"
+    , style "width" "20vw"
+    , style "height" "20vw"
+    , style "margin" "1vw"
+    , style "display" "flex"
+    , style "justify-content" "center"
+    , style "align-items" "center"
+    , style "padding" "20px"
+    , style "border-radius" "5px"
+    , style "flex-direction" "column"
+    ]
+
+
+boxCssMobile : Model -> Int -> List (Attribute Msg)
+boxCssMobile model setting =
+    [ onMouseOver <| SetHoveredServiceItem setting
+    , if model.hoveredServiceItem == setting then
+        style "background-color" "#DB2E54"
+
+      else
+        style "background-color" "#141414"
+    , style "width" "60vw"
+    , style "height" "60vw"
     , style "margin" "1vw"
     , style "display" "flex"
     , style "justify-content" "center"
@@ -606,9 +683,9 @@ portofolio =
         [ sectionTitle "PORTOFOLIU"
         , container []
             [ columns myColumnsModifiers
-                [ style "padding-top" "4rem" ]
+                [ style "padding-top" "4rem", style "display" "flex", style "align-items" "center" ]
                 [ leftColumn "Portofoliu"
-                , column centerColumnModifier [] [ portofolioText ]
+                , column centerColumnModifier [] [ portofolioText, portofolioTextMobile ]
                 , column sideColumnModifier [] []
                 ]
             ]
@@ -617,8 +694,8 @@ portofolio =
 
 squareCss : List (Attribute msg)
 squareCss =
-    [ style "width" "400px"
-    , style "height" "400px"
+    [ style "width" "350px"
+    , style "height" "350px"
     , style "display" "flex"
     , style "justify-content" "center"
     , style "align-items" "center"
@@ -630,23 +707,48 @@ squareCss =
     ]
 
 
+squareCssMobile : List (Attribute msg)
+squareCssMobile =
+    [ style "display" "flex"
+    , style "justify-content" "center"
+    , style "flex-direction" "column"
+    , style "align-items" "center"
+    , style "font-size" "16px"
+    , style "background-color" "#14171F"
+    , style "margin-bottom" "100px"
+    , style "margin-top" "0px"
+    , style "padding" "20px"
+    , style "color" "#DB2E54"
+    ]
+
+
 projectsCss : List (Attribute msg)
 projectsCss =
     [ style "display" "flex"
     , style "justify-content" "center"
     , style "align-items" "left"
     , style "flex-direction" "column"
-    , style "height" "400px"
+    , style "height" "350px"
     , style "margin-bottom" "200px"
     , style "text-align" "left"
     , style "background-color" "#14171F"
     ]
 
 
+isFlexWidescreen : Attribute msg
+isFlexWidescreen =
+    class "is-flex-widescreen"
+
+
+isFlexFullHD : Attribute msg
+isFlexFullHD =
+    class "is-flex-fullhd"
+
+
 portofolioText : Html msg
 portofolioText =
     columns myColumnsModifiers
-        []
+        [ hideOnMobile ]
         [ column columnModifiers
             []
             [ div squareCss [ text "LUCRĂRI DE TERMOPROTECȚIE CU VOPSEA TERMOSPUMANTĂ" ]
@@ -687,6 +789,48 @@ portofolioText =
         ]
 
 
+portofolioTextMobile : Html msg
+portofolioTextMobile =
+    div
+        [ hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, style "flex-direction" "column" ]
+        [ div squareCssMobile
+            [ text "LUCRĂRI DE TERMOPROTECȚIE CU VOPSEA TERMOSPUMANTĂ"
+            , div [ style "font-size" "12px", style "margin-top" "2rem", style "color" "#FFFFFF", style "text-align" "left" ]
+                [ p [] [ text "/ HOTEL TELEFERIC POIANA BRAȘOV" ]
+                , p [] [ text "/ HALA ERTEX BRAȘOV" ]
+                , p [] [ text "/ HALA KATADYN PREJMER" ]
+                , p [] [ text "/ HALA DIETAL CODLEA" ]
+                , p [] [ text "/ HALA REHOMA PITEȘTI" ]
+                , p [] [ text "/ GALERII AUCHAN TG. MUREȘ" ]
+                , p [] [ text "/ BCR SILVER MOUNTAIN POIANA BRAȘOV" ]
+                , p [] [ text "/ CLĂDIRE ONE CHARLES DE GAULLE BUCUREȘTI" ]
+                , p [] [ text "/ SPITALUL ONCOLOGIC BRAȘOV" ]
+                , p [] [ text "/ HALA RECOBOL BRAȘOV" ]
+                , p [] [ text "/ PARCĂRI SUPRATERANE PREDEAL" ]
+                ]
+            ]
+        , div squareCssMobile
+            [ text "LUCRĂRI DE ETANȘARE ANTIFOC"
+            , div [ style "font-size" "12px", style "margin-top" "2rem", style "color" "#FFFFFF", style "text-align" "left" ]
+                [ p [] [ text "/ KRONOSPAN BRAȘOV" ]
+                , p [] [ text "/ SPITALUL VICTOR GOMOIU BUCUREȘTI" ]
+                , p [] [ text "/ PARCARE REGINA MARIA BRAȘOV" ]
+                , p [] [ text "/ HALA DIETAL CODLEA" ]
+                , p [] [ text "/ HALA ZOLLNER SATU MARE" ]
+                , p [] [ text "/ HALA QUIN BRAȘOV" ]
+                , p [] [ text "/ CLĂDIRI DE BIROURI CORESI BUSSINES PARK BRAȘOV" ]
+                , p [] [ text "/ AUCHAN SATU MARE" ]
+                , p [] [ text "/ HALA RUBITECH PREJMER" ]
+                , p [] [ text "/ CLĂDIRE CARPATEX BRAȘOV" ]
+                , p [] [ text "/ AUTOLIV BRAȘOV, ROVINARI, REȘIȚA" ]
+                , p [] [ text "/ HALA BELLMAN BRAȘOV" ]
+                , p [] [ text "/ CENTRUL COM. SHOPPING CITY SIBIU" ]
+                , p [] [ text "/ SPITALUL SF. CONSTANTIN BRAȘOV" ]
+                ]
+            ]
+        ]
+
+
 myColumnsModifiers : ColumnsModifiers
 myColumnsModifiers =
     { multiline = False
@@ -703,9 +847,12 @@ contact =
         [ sectionTitle "CONTACT"
         , container [ style "margin-top" "4rem" ]
             [ columns myColumnsModifiers
-                []
+                [ style "display" "flex", style "align-items" "center" ]
                 [ leftColumn "Contact"
-                , column centerColumnModifier [] [ contactText ]
+                , column centerColumnModifier
+                    []
+                    [ contactText
+                    ]
                 , column sideColumnModifier [] []
                 ]
             ]
