@@ -13,6 +13,8 @@ import Bulma.Layout exposing (..)
 import Bulma.Modifiers as BM
 import Bulma.Modifiers.Typography as BMT
 import Ease
+import Gallery exposing (..)
+import Gallery.Image as Image
 import Html exposing (Attribute, Html, a, br, div, i, img, input, main_, option, p, small, span, strong, text)
 import Html.Attributes exposing (attribute, class, href, id, placeholder, rel, src, style, type_)
 import Html.Events exposing (onClick, onMouseLeave, onMouseOver)
@@ -47,11 +49,14 @@ type Page
 
 type alias Model =
     { menuOn : Bool
+    , isModalOpen : Bool
     , key : Nav.Key
     , page : Page
     , hoveredNavbarItem : Int
     , hoveredServiceItem : Int
+    , clickedServiceItem : Int
     , inView : InView.State
+    , imageGallery : Gallery.State
     }
 
 
@@ -65,11 +70,14 @@ init _ url key =
             InView.init [ "index", "about", "services", "portofolio", "contact" ]
     in
     ( { menuOn = True
+      , isModalOpen = False
       , key = key
       , page = urlToPage url
       , hoveredNavbarItem = 0
       , hoveredServiceItem = 0
+      , clickedServiceItem = 0
       , inView = inViewModel
+      , imageGallery = Gallery.init (List.length imageSlides)
       }
     , Cmd.batch [ Task.attempt (always <| DoNothing <| urlToPage url) (scrollTo <| pageToString <| urlToPage url), Cmd.map InViewMsg inViewCmds ]
     )
@@ -86,6 +94,9 @@ type Msg
     | NoOp
     | OnScroll ( Float, Float )
     | InViewMsg InView.Msg
+    | OpenModal
+    | CloseModal
+    | ImageGalleryMsg Gallery.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -142,6 +153,21 @@ update msg model =
             in
             ( { model | inView = inView }
             , Cmd.map InViewMsg inViewCmds
+            )
+
+        OpenModal ->
+            ( { model | isModalOpen = True, clickedServiceItem = model.hoveredServiceItem }
+            , Cmd.none
+            )
+
+        CloseModal ->
+            ( { model | isModalOpen = False }
+            , Cmd.none
+            )
+
+        ImageGalleryMsg imageGalleryMsg ->
+            ( { model | imageGallery = Gallery.update imageGalleryMsg model.imageGallery }
+            , Cmd.none
             )
 
 
@@ -232,7 +258,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         body =
-            [ div [ gradient, style "height" "100%", style "color" "white" ]
+            [ div [ gradient, style "height" "100%", style "color" "white", overflow model, bodyPosition model, bodyHeight model ]
                 [ stylesheet
                 , navbar model
                 , position model
@@ -241,6 +267,7 @@ view model =
                 , services model
                 , portofolio
                 , contact
+                , modalFrame model
                 , myFooter
                 ]
             ]
@@ -248,6 +275,33 @@ view model =
     { body = body
     , title = "Indagra"
     }
+
+
+overflow : Model -> Attribute msg
+overflow model =
+    if model.isModalOpen then
+        style "overflow-y" "hidden"
+
+    else
+        style "overflow-y" "auto"
+
+
+bodyPosition : Model -> Attribute msg
+bodyPosition model =
+    if model.isModalOpen then
+        style "" ""
+
+    else
+        style "" ""
+
+
+bodyHeight : Model -> Attribute msg
+bodyHeight model =
+    if model.isModalOpen then
+        style "" ""
+
+    else
+        style "" ""
 
 
 myNavbarModifier : NavbarModifiers
@@ -356,27 +410,26 @@ index =
             [ columns columnsModifiers
                 []
                 [ leftColumn "Protecție pasivă de foc din 1992"
-                , column centerColumnModifier [ style "height" "800px" ] []
-                , column sideColumnModifier [] []
+                , column (centerColumnModifier BM.Width10) [ style "height" "800px" ] []
+                , column (sideColumnModifier BM.Width1) [] []
                 ]
             ]
         ]
 
 
-titleLine : Html msg
-titleLine =
+titleLine : String -> Html msg
+titleLine color =
     Svg.svg
         [ SvgAttributes.width "150"
         , SvgAttributes.height "3"
         , SvgAttributes.viewBox "0 0 160 1"
-        , SvgAttributes.color "red"
         ]
         [ Svg.line
             [ SvgAttributes.x1 "0"
             , SvgAttributes.y1 "0"
             , SvgAttributes.x2 "150"
             , SvgAttributes.y2 "0"
-            , SvgAttributes.stroke "#FFFFFF"
+            , SvgAttributes.stroke color
             , SvgAttributes.strokeWidth "3"
             , SvgAttributes.strokeMiterlimit "10"
             , SvgAttributes.fill "none"
@@ -385,20 +438,19 @@ titleLine =
         ]
 
 
-verticalLine : Html msg
-verticalLine =
+verticalLine : String -> Html msg
+verticalLine color =
     Svg.svg
         [ SvgAttributes.width "3"
         , SvgAttributes.height "150"
         , SvgAttributes.viewBox "0 0 3 150"
-        , SvgAttributes.color "red"
         ]
         [ Svg.line
             [ SvgAttributes.x1 "0"
             , SvgAttributes.y1 "0"
             , SvgAttributes.x2 "0"
             , SvgAttributes.y2 "150"
-            , SvgAttributes.stroke "#FFFFFF"
+            , SvgAttributes.stroke color
             , SvgAttributes.strokeWidth "3"
             , SvgAttributes.strokeMiterlimit "10"
             , SvgAttributes.fill "none"
@@ -423,49 +475,39 @@ emptyCircle =
 
 verticalTextCss : List (Attribute msg)
 verticalTextCss =
-    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)", style "height" "250px", hideOnMobile ]
+    [ style "writing-mode" "vertical-rl", style "transform" "rotate(180deg)", style "height" "350px", hideOnMobile ]
 
 
-centerWidth : BM.Devices (Maybe BM.Width)
-centerWidth =
-    { mobile = Just BM.Width10
-    , tablet = Just BM.Width10
-    , desktop = Just BM.Width10
-    , widescreen = Just BM.Width10
-    , fullHD = Just BM.Width10
+centerWidth : BM.Width -> BM.Devices (Maybe BM.Width)
+centerWidth width =
+    { mobile = Just width
+    , tablet = Just width
+    , desktop = Just width
+    , widescreen = Just width
+    , fullHD = Just width
     }
 
 
-centerColumnModifier : ColumnModifiers
-centerColumnModifier =
+centerColumnModifier : BM.Width -> ColumnModifiers
+centerColumnModifier width =
     { offset = BM.Auto
-    , widths = centerWidth
+    , widths = centerWidth width
     }
 
 
-sideWidth : BM.Devices (Maybe BM.Width)
-sideWidth =
-    { mobile = Just BM.Width1
-    , tablet = Just BM.Width1
-    , desktop = Just BM.Width1
-    , widescreen = Just BM.Width1
-    , fullHD = Just BM.Width1
-    }
-
-
-sideColumnModifier : ColumnModifiers
-sideColumnModifier =
+sideColumnModifier : BM.Width -> ColumnModifiers
+sideColumnModifier width =
     { offset = BM.Auto
-    , widths = sideWidth
+    , widths = centerWidth width
     }
 
 
 sectionTitle : String -> Html msg
 sectionTitle title =
     div [ BMT.textSizeByDevice titleFontSize, style "display" "flex" ]
-        [ div [ hideOnMobile ] [ titleLine ]
+        [ div [ hideOnMobile ] [ titleLine "#FFFFFF" ]
         , div [] [ text title ]
-        , div [ hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, style "align-items" "flex-end" ] [ titleLine ]
+        , div [ hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, style "align-items" "flex-end" ] [ titleLine "#FFFFFF" ]
         ]
 
 
@@ -522,15 +564,15 @@ getCurrentPage model =
 
 about : Html msg
 about =
-    section NotSpaced
+    section Spaced
         [ id "about" ]
         [ sectionTitle "DESPRE NOI"
         , container []
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem" ]
                 [ leftColumn "Despre noi"
-                , column centerColumnModifier [] [ aboutText ]
-                , column sideColumnModifier [] []
+                , column (centerColumnModifier BM.Width10) [] [ aboutText ]
+                , column (sideColumnModifier BM.Width1) [] []
                 ]
             ]
         ]
@@ -538,13 +580,23 @@ about =
 
 leftColumn : String -> Html msg
 leftColumn sectionName =
-    column sideColumnModifier
+    column (sideColumnModifier BM.Width1)
         [ style "display" "flex", style "flex-direction" "row", style "align-items" "center" ]
         [ div verticalTextCss [ text sectionName ]
-        , div [ style "display" "flex", style "height" "150px", style "margin-top" "150px", hideOnMobile ] [ verticalLine ]
+        , div [ style "display" "flex", style "height" "150px", style "margin-top" "150px", hideOnMobile ] [ verticalLine "#FFFFFF" ]
         ]
 
 
+modalLeftColumn : String -> Html msg
+modalLeftColumn sectionName =
+    column (sideColumnModifier BM.Width2)
+        [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "color" "black" ]
+        [ div verticalTextCss [ text sectionName ]
+        , div [ style "display" "flex", style "height" "150px", style "margin-top" "300px", hideOnMobile ] [ verticalLine "#000000" ]
+        ]
+
+
+hideOnMobile : Attribute msg
 hideOnMobile =
     BM.displayByDevice
         { mobile = BM.Hidden
@@ -555,6 +607,7 @@ hideOnMobile =
         }
 
 
+hideOnWideScreen : Attribute msg
 hideOnWideScreen =
     BM.displayByDevice
         { mobile = BM.Flex
@@ -601,8 +654,8 @@ services model =
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0, style "display" "flex", style "align-items" "center" ]
                 [ leftColumn "Servicii"
-                , column centerColumnModifier [] [ serviceBoxes model, serviceBoxesMobile model ]
-                , column sideColumnModifier [] []
+                , column (centerColumnModifier BM.Width10) [] [ serviceBoxes model, serviceBoxesMobile model ]
+                , column (sideColumnModifier BM.Width1) [] []
                 ]
             ]
         ]
@@ -629,16 +682,146 @@ serviceBoxes model =
 
 serviceBoxesMobile : Model -> Html Msg
 serviceBoxesMobile model =
-    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "justify-content" "center", hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen ]
+    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "justify-content" "center", hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, onClick OpenModal ]
         [ div (boxCssMobile model 1) [ div [] [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ], div [] [ img [ src "./lucrari_termoprotectie.svg" ] [] ] ]
         , div (boxCssMobile model 2) [ div [] [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ], div [] [ img [ src "./etansarea_penetratiilor.svg" ] [] ] ]
         , div (boxCssMobile model 3) [ div [] [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ], div [] [ img [ src "./montaj_usi.svg" ] [] ] ]
         ]
 
 
+modalFrame : Model -> Html Msg
+modalFrame model =
+    let
+        service =
+            case model.clickedServiceItem of
+                1 ->
+                    termoProtection
+
+                2 ->
+                    sealing
+
+                3 ->
+                    metalicDoors model
+
+                _ ->
+                    metalicDoors model
+    in
+    modal model.isModalOpen
+        []
+        [ modalBackground [ onClick CloseModal, style "position" "absolute" ] []
+        , modalContent [ style "backgroundColor" "white", style "width" "80vw" ]
+            [ div [ style "display" "flex", style "align-items" "left" ] [ img [ src "./logo_indagra_black.svg", style "padding-left" "80px", style "padding-top" "40px" ] [] ]
+            , service
+            , div [ style "color" "black", style "margin-top" "20vh", style "margin-bottom" "10vh" ] [ text "Copyright © 2020 INDAGRA SRL" ]
+            ]
+        , modalClose BM.Large [ onClick CloseModal, href "" ] []
+        ]
+
+
+termoProtection : Html Msg
+termoProtection =
+    div []
+        [ columns myColumnsModifiers
+            [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0, style "display" "flex", style "align-items" "center" ]
+            [ modalLeftColumn "Execuție de lucrări de termoprotecție"
+            , column (centerColumnModifier BM.Width8)
+                [ style "color" "#4d4d4d", style "display" "flex", style "text-align" "left", style "flex-direction" "column", style "line-height" "1.5rem" ]
+                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "1rem", style "width" "60%" ] [ text "Execuție De Lucrări De Termoprotecție" ]
+                , div [ style "margin-bottom" "3rem", style "width" "45%", style "font-size" "18px" ] [ text "Protecția structurilor metalice cu vopsele termospumante sau torcret" ]
+                , div [ style "color" "#DB2E54", style "font-size" "32px", style "line-height" "2.0rem", style "margin-bottom" "1rem", style "font-weight" "bold", style "width" "55%" ] [ text "Protecția stucturilor din oțel împotriva incendiilor cu ajutorul vopselelor termospumante" ]
+                , div [ style "margin-bottom" "2rem" ] [ titleLine "#DB2E54" ]
+                , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "18px", style "text-align" "justify", style "width" "45%" ] [ text "La temperaturi mai mari de 500°C rezistența stucturilor din oțel se reduce în mod însemnat. Structurile portante își pot pierde funcția lor inițială, astfel încît clădirea se poate prăbuși parțial sau total. Sistemele noastre de vopsele termospumante (pe bază de apă sau solvent) încep să-și facă efectul începând de la 180-200°C, formând pe suprafața oțelului un strat special de spumă care împiedică încălzirea acestuia la temperatura critică." ]
+                , div [] [ img [ src "./illustration_termoprotectie.svg", style "padding-left" "20px" ] [] ]
+                ]
+            ]
+        ]
+
+
+sealing : Html Msg
+sealing =
+    div []
+        [ columns myColumnsModifiers
+            [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0, style "display" "flex", style "align-items" "center" ]
+            [ modalLeftColumn "Etanșarea penetrațiilor din pereți și planșee cu material termospumant"
+            , column (centerColumnModifier BM.Width8)
+                [ style "color" "#4d4d4d", style "display" "flex", style "text-align" "left", style "flex-direction" "column", style "line-height" "1.5rem" ]
+                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "3rem", style "width" "70%" ] [ text "Etanșarea penetrațiilor din pereți și planșee cu material termospumant" ]
+                , sealingType "Etașarea antifoc tip „Combi” a trecerilor de cabluri, țevilor metalice, conductelor din material plastic" "Formarea acestei închideri este asemănătoare cu cea a trecerilor de cabluri. Diferă numai în privința utilizării materialelor care își măresc volumul la căldură, respectiv a eventualelor altor sisteme, cum sunt de exemplu, coliere antifoc, laminate etc., în funcție de conductele care străbat peretele." "./etansare/02_illustration_etansare_combi.svg"
+                , sealingType "Etanșarea trecerilor de conducte din material plastic, cu ajutorul colierelor antifoc" "Colierul antifoc, montat în jurul țevii, oferă o protecție simplă dar eficientă. La scurt timp după izbucnirea focului își mărește volumul în asemenea măsură, încât, datorită umpluturii speciale, va strangula- va tăia- complet țeava din material plastic, formând astfel un obstacol în calea extinderii incendiului." "./etansare/01_illustration_etansare_colier.svg"
+                , sealingType "Etanșarea antifoc a trecerilor de conducte din material plastic – laminate încorporabile" "Asemănător colierelor, acest sistem împiedică propagarea focului prin ștrangularea conductei și umplerea integrală a deschiderii cu un material special." "./etansare/03_illustration_etansare_plastic_laminat.svg"
+                , sealingType "Etanșarea tecerilor de cabluri" "Cu așa-numită etanșare moale poate fi creat un compartiment de incendiu corespunzător, atât în cazul planșeelor cât și în cazul pereților, prin utilizarea de plăci tari de vată minerală, respectiv de vopsea și chit care formează o spumă când sunt încălzite.Este potrivit pentru etanșarea a unui număr mare de treceri de diferite tipuri și dimensiuni. Suprafața închiderii este flexibilă, deci permite eventuala reparare sau deschidera sistemului, amplasarea ulterioară de cabluri." "./etansare/04_illustration_etansare_cabluri.svg"
+                ]
+            ]
+        ]
+
+
+sealingType title content imageSrc =
+    div []
+        [ div [ style "color" "#DB2E54", style "font-size" "24px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", style "width" "70%" ] [ text title ]
+        , div [ style "margin-bottom" "2rem" ] [ titleLine "#DB2E54" ]
+        , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "16px", style "text-align" "justify", style "width" "60%" ] [ text content ]
+        , div [] [ img [ src imageSrc, style "padding-left" "20px", style "margin-bottom" "5rem" ] [] ]
+        ]
+
+
+metalicDoors : Model -> Html Msg
+metalicDoors model =
+    div []
+        [ columns myColumnsModifiers
+            [ style "padding-top" "4rem", onMouseLeave <| SetHoveredServiceItem 0, style "display" "flex", style "align-items" "center" ]
+            [ modalLeftColumn "Execuție și montaj de uși metalice"
+            , column (centerColumnModifier BM.Width8)
+                [ style "color" "#4d4d4d", style "display" "flex", style "text-align" "left", style "flex-direction" "column", style "line-height" "1.5rem" ]
+                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "1rem", style "width" "60%" ] [ text "Execuție și montaj de uși metalice" ]
+                , div [ style "margin-bottom" "1rem", style "width" "45%", style "font-size" "18px" ] [ text "-cu termoizolație" ]
+                , div [ style "margin-bottom" "3rem", style "width" "45%", style "font-size" "18px" ] [ text "-cu plumb împotriva radiațiilor" ]
+                , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "18px", style "text-align" "justify", style "width" "65%" ] [ text "Se asigură transport, montaj, garanție și service." ]
+                , div [] [ img [ src "./montaj/illustration_usa.svg", style "padding-left" "20px" ] [] ]
+                ]
+            ]
+        , imageSlider model
+        ]
+
+
+imageSlider model =
+    div [ style "color" "black", style "display" "flex", style "align-items" "center", style "justify-content" "center", style "margin-top" "20vh" ]
+        [ Html.map ImageGalleryMsg <|
+            Gallery.view imageConfig model.imageGallery [ Gallery.Arrows ] imageSlides
+        ]
+
+
+imageSlides : List ( String, Html msg )
+imageSlides =
+    List.map (\x -> ( x, Image.slide x Image.Cover )) images
+
+
+imageConfig : Gallery.Config
+imageConfig =
+    Gallery.config
+        { id = "image-gallery"
+        , transition = 500
+        , width = Gallery.px 794
+        , height = Gallery.px 452
+        }
+
+
+images : List String
+images =
+    [ "./montaj/indagra_usa_1.png"
+    , "./montaj/indagra_usa_2.png"
+    , "./montaj/indagra_usa_3.png"
+    , "./montaj/indagra_usa_4.png"
+    , "./montaj/indagra_usa_5.png"
+    , "./montaj/indagra_usa_6.png"
+    , "./montaj/indagra_usa_7.png"
+    , "./montaj/indagra_usa_8.png"
+    ]
+
+
 boxCss : Model -> Int -> List (Attribute Msg)
 boxCss model setting =
     [ onMouseOver <| SetHoveredServiceItem setting
+    , onClick OpenModal
     , if model.hoveredServiceItem == setting then
         style "background-color" "#DB2E54"
 
@@ -659,6 +842,7 @@ boxCss model setting =
 boxCssMobile : Model -> Int -> List (Attribute Msg)
 boxCssMobile model setting =
     [ onMouseOver <| SetHoveredServiceItem setting
+    , onClick OpenModal
     , if model.hoveredServiceItem == setting then
         style "background-color" "#DB2E54"
 
@@ -678,15 +862,15 @@ boxCssMobile model setting =
 
 portofolio : Html msg
 portofolio =
-    section NotSpaced
+    section Spaced
         [ id "portofolio" ]
         [ sectionTitle "PORTOFOLIU"
         , container []
             [ columns myColumnsModifiers
                 [ style "padding-top" "4rem", style "display" "flex", style "align-items" "center" ]
                 [ leftColumn "Portofoliu"
-                , column centerColumnModifier [] [ portofolioText, portofolioTextMobile ]
-                , column sideColumnModifier [] []
+                , column (centerColumnModifier BM.Width10) [] [ portofolioText, portofolioTextMobile ]
+                , column (sideColumnModifier BM.Width1) [] []
                 ]
             ]
         ]
@@ -701,7 +885,7 @@ squareCss =
     , style "align-items" "center"
     , style "font-size" "24px"
     , style "background-color" "#14171F"
-    , style "margin-bottom" "200px"
+    , style "margin-top" "100px"
     , style "margin-top" "0px"
     , style "padding" "100px"
     ]
@@ -715,7 +899,7 @@ squareCssMobile =
     , style "align-items" "center"
     , style "font-size" "16px"
     , style "background-color" "#14171F"
-    , style "margin-bottom" "100px"
+    , style "margin-top" "100px"
     , style "margin-top" "0px"
     , style "padding" "20px"
     , style "color" "#DB2E54"
@@ -729,7 +913,7 @@ projectsCss =
     , style "align-items" "left"
     , style "flex-direction" "column"
     , style "height" "350px"
-    , style "margin-bottom" "200px"
+    , style "margin-top" "100px"
     , style "text-align" "left"
     , style "background-color" "#14171F"
     ]
@@ -842,18 +1026,18 @@ myColumnsModifiers =
 
 contact : Html msg
 contact =
-    section NotSpaced
+    section Spaced
         [ id "contact" ]
         [ sectionTitle "CONTACT"
         , container [ style "margin-top" "4rem" ]
             [ columns myColumnsModifiers
                 [ style "display" "flex", style "align-items" "center" ]
                 [ leftColumn "Contact"
-                , column centerColumnModifier
+                , column (centerColumnModifier BM.Width10)
                     []
                     [ contactText
                     ]
-                , column sideColumnModifier [] []
+                , column (sideColumnModifier BM.Width1) [] []
                 ]
             ]
         ]
