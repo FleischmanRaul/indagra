@@ -24,7 +24,7 @@ import Svg as Svg
 import Svg.Attributes as SvgAttributes
 import Task
 import Url
-import Url.Parser as Url exposing ((</>), Parser)
+import Url.Parser as Url exposing ((</>), (<?>), Parser, string)
 
 
 
@@ -37,14 +37,6 @@ defaultConfig =
     , speed = 50
     , easing = Ease.outQuint
     }
-
-
-type Page
-    = Index
-    | About
-    | Services
-    | Portofolio
-    | Contact
 
 
 type alias Model =
@@ -94,7 +86,7 @@ type Msg
     | NoOp
     | OnScroll ( Float, Float )
     | InViewMsg InView.Msg
-    | OpenModal
+    | OpenModal ServiceType
     | CloseModal
     | ImageGalleryMsg Gallery.Msg
 
@@ -155,14 +147,16 @@ update msg model =
             , Cmd.map InViewMsg inViewCmds
             )
 
-        OpenModal ->
+        OpenModal serviceType ->
             ( { model | isModalOpen = True, clickedServiceItem = model.hoveredServiceItem }
+              -- , Nav.pushUrl model.key <| pageToUrl <| Services <| Just serviceType
             , Cmd.none
             )
 
         CloseModal ->
             ( { model | isModalOpen = False }
-            , Cmd.none
+              -- , Nav.pushUrl model.key <| pageToUrl <| Services Nothing
+            , Task.attempt (always <| DoNothing <| Services Nothing) (scrollToWithOptions defaultConfig <| pageToString <| Services Nothing)
             )
 
         ImageGalleryMsg imageGalleryMsg ->
@@ -176,6 +170,20 @@ jumpToBottom id =
     Dom.getViewportOf id
         |> Task.andThen (\info -> Dom.setViewportOf id 0 info.scene.height)
         |> Task.attempt (\_ -> NoOp)
+
+
+type Page
+    = Index
+    | About
+    | Services (Maybe ServiceType)
+    | Portofolio
+    | Contact
+
+
+type ServiceType
+    = TermoProtection
+    | Sealing
+    | MetalicDoors
 
 
 urlToPage : Url.Url -> Page
@@ -194,10 +202,31 @@ urlParser =
     Url.oneOf
         [ Url.map Index Url.top
         , Url.map About (Url.s "despre-noi")
-        , Url.map Services (Url.s "servicii")
+        , Url.map (Services << Just) (Url.s "servicii" </> st)
+        , Url.map (Services Nothing) (Url.s "servicii")
         , Url.map Portofolio (Url.s "portofoliu")
         , Url.map Contact (Url.s "contact")
         ]
+
+
+st =
+    Url.custom "" stringToServiceType
+
+
+stringToServiceType : String -> Maybe ServiceType
+stringToServiceType s =
+    case s of
+        "protectie_termica" ->
+            Just TermoProtection
+
+        "etansare" ->
+            Just Sealing
+
+        "usi_metalice" ->
+            Just MetalicDoors
+
+        _ ->
+            Nothing
 
 
 pageToString : Page -> String
@@ -209,8 +238,17 @@ pageToString page =
         About ->
             "about"
 
-        Services ->
+        Services Nothing ->
             "services"
+
+        Services (Just TermoProtection) ->
+            "servicii/protectie_termica"
+
+        Services (Just Sealing) ->
+            "servicii/etansare"
+
+        Services (Just MetalicDoors) ->
+            "servicii/usi_metalice"
 
         Portofolio ->
             "portofolio"
@@ -228,8 +266,17 @@ pageToUrl page =
         About ->
             "despre-noi"
 
-        Services ->
+        Services Nothing ->
             "servicii"
+
+        Services (Just TermoProtection) ->
+            "servicii/protectie_termica"
+
+        Services (Just Sealing) ->
+            "servicii/etansare"
+
+        Services (Just MetalicDoors) ->
+            "servicii/usi_metalice"
 
         Portofolio ->
             "portofoliu"
@@ -258,7 +305,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         body =
-            [ div [ gradient, style "height" "100%", style "color" "white", overflow model, bodyPosition model, bodyHeight model ]
+            [ div [ gradient, style "color" "white", overflow model, bodyPosition model, bodyHeight model ]
                 [ stylesheet
                 , navbar model
                 , position model
@@ -280,16 +327,16 @@ view model =
 overflow : Model -> Attribute msg
 overflow model =
     if model.isModalOpen then
-        style "overflow-y" "hidden"
+        style "overflow" "hidden"
 
     else
-        style "overflow-y" "auto"
+        style "" ""
 
 
 bodyPosition : Model -> Attribute msg
 bodyPosition model =
     if model.isModalOpen then
-        style "" ""
+        style "overflow-y" "hidden"
 
     else
         style "" ""
@@ -298,7 +345,7 @@ bodyPosition model =
 bodyHeight : Model -> Attribute msg
 bodyHeight model =
     if model.isModalOpen then
-        style "" ""
+        style "height" "92vh"
 
     else
         style "" ""
@@ -367,7 +414,7 @@ aboutSetting =
 
 servicesSetting : NavbarItemSettings
 servicesSetting =
-    { section = Services
+    { section = Services Nothing
     , hoverNumber = 2
     , hoverColor = "#DB2E54"
     }
@@ -532,7 +579,7 @@ position model =
                 About ->
                     [ emptyCircle, filledCircle, emptyCircle, emptyCircle, emptyCircle ]
 
-                Services ->
+                Services _ ->
                     [ emptyCircle, emptyCircle, filledCircle, emptyCircle, emptyCircle ]
 
                 Portofolio ->
@@ -553,7 +600,7 @@ getCurrentPage model =
         Portofolio
 
     else if InView.check "services" model.inView == Just True then
-        Services
+        Services Nothing
 
     else if InView.check "about" model.inView == Just True then
         About
@@ -682,7 +729,7 @@ serviceBoxes model =
 
 serviceBoxesMobile : Model -> Html Msg
 serviceBoxesMobile model =
-    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "justify-content" "center", hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, onClick OpenModal ]
+    div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "justify-content" "center", hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen ]
         [ div (boxCssMobile model 1) [ div [] [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ], div [] [ img [ src "./lucrari_termoprotectie.svg" ] [] ] ]
         , div (boxCssMobile model 2) [ div [] [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ], div [] [ img [ src "./etansarea_penetratiilor.svg" ] [] ] ]
         , div (boxCssMobile model 3) [ div [] [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ], div [] [ img [ src "./montaj_usi.svg" ] [] ] ]
@@ -708,7 +755,7 @@ modalFrame model =
     in
     modal model.isModalOpen
         []
-        [ modalBackground [ onClick CloseModal, style "position" "absolute" ] []
+        [ modalBackground [ onClick CloseModal ] []
         , modalContent [ style "backgroundColor" "white", style "width" "80vw" ]
             [ div [ style "display" "flex", style "align-items" "left" ] [ img [ src "./logo_indagra_black.svg", style "padding-left" "80px", style "padding-top" "40px" ] [] ]
             , service
@@ -755,6 +802,7 @@ sealing =
         ]
 
 
+sealingType : String -> String -> String -> Html Msg
 sealingType title content imageSrc =
     div []
         [ div [ style "color" "#DB2E54", style "font-size" "24px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", style "width" "70%" ] [ text title ]
@@ -779,10 +827,11 @@ metalicDoors model =
                 , div [] [ img [ src "./montaj/illustration_usa.svg", style "padding-left" "20px" ] [] ]
                 ]
             ]
-        , imageSlider model
+        , div [] [ imageSlider model ]
         ]
 
 
+imageSlider : Model -> Html Msg
 imageSlider model =
     div [ style "color" "black", style "display" "flex", style "align-items" "center", style "justify-content" "center", style "margin-top" "20vh" ]
         [ Html.map ImageGalleryMsg <|
@@ -820,8 +869,20 @@ images =
 
 boxCss : Model -> Int -> List (Attribute Msg)
 boxCss model setting =
+    let
+        serviceType =
+            case setting of
+                1 ->
+                    TermoProtection
+
+                2 ->
+                    Sealing
+
+                _ ->
+                    MetalicDoors
+    in
     [ onMouseOver <| SetHoveredServiceItem setting
-    , onClick OpenModal
+    , onClick (OpenModal serviceType)
     , if model.hoveredServiceItem == setting then
         style "background-color" "#DB2E54"
 
@@ -841,8 +902,20 @@ boxCss model setting =
 
 boxCssMobile : Model -> Int -> List (Attribute Msg)
 boxCssMobile model setting =
+    let
+        serviceType =
+            case setting of
+                1 ->
+                    TermoProtection
+
+                2 ->
+                    Sealing
+
+                _ ->
+                    MetalicDoors
+    in
     [ onMouseOver <| SetHoveredServiceItem setting
-    , onClick OpenModal
+    , onClick (OpenModal serviceType)
     , if model.hoveredServiceItem == setting then
         style "background-color" "#DB2E54"
 
