@@ -15,7 +15,7 @@ import Bulma.Modifiers.Typography as BMT
 import Ease
 import Gallery exposing (..)
 import Gallery.Image as Image
-import Html exposing (Attribute, Html, a, br, div, i, img, input, main_, option, p, small, span, strong, text)
+import Html exposing (Attribute, Html, a, br, button, div, i, img, input, main_, option, p, small, span, strong, text)
 import Html.Attributes exposing (attribute, class, href, id, placeholder, rel, src, style, type_)
 import Html.Events exposing (onClick, onMouseLeave, onMouseOver)
 import InView as InView
@@ -55,13 +55,16 @@ type alias Model =
 port onScroll : (( Float, Float ) -> msg) -> Sub msg
 
 
+port sendData : String -> Cmd msg
+
+
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     let
         ( inViewModel, inViewCmds ) =
             InView.init [ "index", "about", "services", "portofolio", "contact" ]
     in
-    ( { menuOn = True
+    ( { menuOn = False
       , isModalOpen = False
       , key = key
       , page = urlToPage url
@@ -113,7 +116,7 @@ update msg model =
             )
 
         NavbarClick page ->
-            ( model
+            ( { model | menuOn = False }
             , Task.attempt (always <| DoNothing page) (scrollToWithOptions defaultConfig <| pageToString page)
             )
 
@@ -150,7 +153,7 @@ update msg model =
         OpenModal serviceType ->
             ( { model | isModalOpen = True, clickedServiceItem = model.hoveredServiceItem }
               -- , Nav.pushUrl model.key <| pageToUrl <| Services <| Just serviceType
-            , Cmd.none
+            , sendData "!"
             )
 
         CloseModal ->
@@ -371,13 +374,13 @@ navbar model =
         [ navbarBrand []
             (myNavbarBurger model.menuOn)
             [ navbarItem False
-                [ onClick <| NavbarClick Index ]
+                [ onClick <| NavbarClick Index, style "cursor" "pointer" ]
                 [ img [ src "./indagra_logo.svg" ] []
                 ]
             ]
         , navbarMenu model.menuOn
             [ gradient ]
-            [ navbarEnd [ onMouseLeave <| SetHoveredNavbarItem 0 ]
+            [ navbarEnd [ onMouseLeave <| SetHoveredNavbarItem 0, style "cursor" "pointer" ]
                 [ navbarItem False (navbarItemCss model aboutSetting) [ text "DESPRE NOI" ]
                 , navbarItem False (navbarItemCss model servicesSetting) [ text "SERVICII" ]
                 , navbarItem False (navbarItemCss model portofolioSetting) [ text "PORTOFOLIU" ]
@@ -451,16 +454,27 @@ navbarItemCss model setting =
 
 index : Html msg
 index =
-    section NotSpaced
-        [ id "index", style "background" "url('./indagra_index.png')", style "background-repeat" "no-repeat", style "background-size" "100vw" ]
-        [ container []
-            [ columns columnsModifiers
-                []
-                [ leftColumn "Protecție pasivă de foc din 1992"
-                , column (centerColumnModifier BM.Width10) [ style "height" "800px" ] []
-                , column (sideColumnModifier BM.Width1) [] []
+    div []
+        [ section NotSpaced
+            [ id "index", style "background" "url('./indagra_index.png')", style "background-repeat" "no-repeat", style "background-size" "100vw", hideOnMobile ]
+            [ container []
+                [ columns columnsModifiers
+                    []
+                    [ leftColumn "Protecție pasivă de foc din 1992"
+                    , column (centerColumnModifier BM.Width10) [ style "height" "1000px" ] []
+                    , column (sideColumnModifier BM.Width1) [] []
+                    ]
                 ]
             ]
+        , myImage
+        ]
+
+
+myImage : Html msg
+myImage =
+    image SixteenByNine
+        [ hideOnWideScreen, isHiddenWidescreen ]
+        [ img [ src "./indagra_index.png" ] []
         ]
 
 
@@ -588,7 +602,7 @@ position model =
                 Contact ->
                     [ emptyCircle, emptyCircle, emptyCircle, emptyCircle, filledCircle ]
     in
-    div [ style "position" "fixed", style "top" "45vh", style "right" "1vw", style "display" "flex", style "flex-direction" "column" ] order
+    div [ style "position" "fixed", style "top" "45vh", style "right" "1vw", style "display" "flex", style "flex-direction" "column", hideOnMobile ] order
 
 
 getCurrentPage : Model -> Page
@@ -637,7 +651,7 @@ leftColumn sectionName =
 modalLeftColumn : String -> Html msg
 modalLeftColumn sectionName =
     column (sideColumnModifier BM.Width2)
-        [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "color" "black" ]
+        [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "color" "black", hideOnMobile ]
         [ div verticalTextCss [ text sectionName ]
         , div [ style "display" "flex", style "height" "150px", style "margin-top" "300px", hideOnMobile ] [ verticalLine "#000000" ]
         ]
@@ -710,7 +724,7 @@ services model =
 
 isHiddenWidescreen : Attribute msg
 isHiddenWidescreen =
-    class "is-hidden-widescreen"
+    class "is-hidden-widescreen is-hidden-fullhd"
 
 
 isHiddenFullHD : Attribute msg
@@ -720,7 +734,7 @@ isHiddenFullHD =
 
 serviceBoxes : Model -> Html Msg
 serviceBoxes model =
-    div [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "justify-content" "center", hideOnMobile ]
+    div [ style "display" "flex", style "flex-direction" "row", style "align-items" "center", style "justify-content" "center", hideOnMobile, style "cursor" "pointer" ]
         [ div (boxCss model 1) [ div [] [ text "EXECUȚIE DE LUCRĂRI DE TERMOPROTECȚIE" ], div [] [ img [ src "./lucrari_termoprotectie.svg" ] [] ] ]
         , div (boxCss model 2) [ div [] [ text "ETANȘAREA PENETRAȚIILOR DIN PEREȚI ȘI PLANȘEE CU MATERIAL TERMOSPUMANT" ], div [] [ img [ src "./etansarea_penetratiilor.svg" ] [] ] ]
         , div (boxCss model 3) [ div [] [ text "EXECUȚIE ȘI MONTAJ DE UȘI METALICE " ], div [] [ img [ src "./montaj_usi.svg" ] [] ] ]
@@ -757,9 +771,10 @@ modalFrame model =
         []
         [ modalBackground [ onClick CloseModal ] []
         , modalContent [ style "backgroundColor" "white", style "width" "80vw" ]
-            [ div [ style "display" "flex", style "align-items" "left" ] [ img [ src "./logo_indagra_black.svg", style "padding-left" "80px", style "padding-top" "40px" ] [] ]
+            [ div [ style "display" "flex", style "align-items" "left" ] [ img [ src "./logo_indagra_black.svg", style "padding-left" "5vw", style "padding-top" "5vw", style "margin" "0", style "width" "20vmax" ] [] ]
             , service
-            , div [ style "color" "black", style "margin-top" "20vh", style "margin-bottom" "10vh" ] [ text "Copyright © 2020 INDAGRA SRL" ]
+            , div [ style "color" "black", style "margin-top" "10vh", style "margin-bottom" "10vh", style "display" "flex", style "justify-content" "center", hideOnMobile ] [ text "Copyright © 2020 INDAGRA SRL" ]
+            , div [ style "color" "black", style "margin-top" "5vh", style "margin-bottom" "5vh", style "font-size" "8px", style "display" "flex", style "justify-content" "center", hideOnWideScreen, isHiddenWidescreen ] [ text "Copyright © 2020 INDAGRA SRL" ]
             ]
         , modalClose BM.Large [ onClick CloseModal, href "" ] []
         ]
@@ -773,11 +788,15 @@ termoProtection =
             [ modalLeftColumn "Execuție de lucrări de termoprotecție"
             , column (centerColumnModifier BM.Width8)
                 [ style "color" "#4d4d4d", style "display" "flex", style "text-align" "left", style "flex-direction" "column", style "line-height" "1.5rem" ]
-                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "1rem", style "width" "60%" ] [ text "Execuție De Lucrări De Termoprotecție" ]
-                , div [ style "margin-bottom" "3rem", style "width" "45%", style "font-size" "18px" ] [ text "Protecția structurilor metalice cu vopsele termospumante sau torcret" ]
-                , div [ style "color" "#DB2E54", style "font-size" "32px", style "line-height" "2.0rem", style "margin-bottom" "1rem", style "font-weight" "bold", style "width" "55%" ] [ text "Protecția stucturilor din oțel împotriva incendiilor cu ajutorul vopselelor termospumante" ]
-                , div [ style "margin-bottom" "2rem" ] [ titleLine "#DB2E54" ]
-                , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "18px", style "text-align" "justify", style "width" "45%" ] [ text "La temperaturi mai mari de 500°C rezistența stucturilor din oțel se reduce în mod însemnat. Structurile portante își pot pierde funcția lor inițială, astfel încît clădirea se poate prăbuși parțial sau total. Sistemele noastre de vopsele termospumante (pe bază de apă sau solvent) încep să-și facă efectul începând de la 180-200°C, formând pe suprafața oțelului un strat special de spumă care împiedică încălzirea acestuia la temperatura critică." ]
+                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "1rem", style "width" "60%", hideOnMobile ] [ text "Execuție De Lucrări De Termoprotecție" ]
+                , div [ style "color" "#DB2E54", style "font-size" "18px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", style "width" "100%", hideOnWideScreen, isHiddenWidescreen ] [ text "Execuție De Lucrări De Termoprotecție" ]
+                , div [ style "margin-bottom" "3rem", style "width" "45%", style "font-size" "18px", hideOnMobile ] [ text "Protecția structurilor metalice cu vopsele termospumante sau torcret" ]
+                , div [ style "margin-bottom" "3rem", style "width" "100%", style "font-size" "12px", style "line-height" "1.0rem", hideOnWideScreen, isHiddenWidescreen ] [ text "Protecția structurilor metalice cu vopsele termospumante sau torcret" ]
+                , div [ style "color" "#DB2E54", style "font-size" "32px", style "line-height" "2.0rem", style "margin-bottom" "1rem", style "font-weight" "bold", style "width" "55%", hideOnMobile ] [ text "Protecția stucturilor din oțel împotriva incendiilor cu ajutorul vopselelor termospumante" ]
+                , div [ style "color" "#DB2E54", style "font-size" "18px", style "line-height" "1.5rem", style "margin-bottom" "1rem", style "font-weight" "bold", style "width" "100%", hideOnWideScreen, isHiddenWidescreen ] [ text "Protecția stucturilor din oțel împotriva incendiilor cu ajutorul vopselelor termospumante" ]
+                , div [ style "margin-bottom" "2rem", hideOnMobile ] [ titleLine "#DB2E54" ]
+                , div [ style "margin-bottom" "3rem", style "font-size" "18px", style "text-align" "justify", style "width" "45%", hideOnMobile ] [ text "La temperaturi mai mari de 500°C rezistența stucturilor din oțel se reduce în mod însemnat. Structurile portante își pot pierde funcția lor inițială, astfel încît clădirea se poate prăbuși parțial sau total. Sistemele noastre de vopsele termospumante (pe bază de apă sau solvent) încep să-și facă efectul începând de la 180-200°C, formând pe suprafața oțelului un strat special de spumă care împiedică încălzirea acestuia la temperatura critică." ]
+                , div [ style "margin-bottom" "1rem", style "font-size" "12px", style "text-align" "left", style "width" "100%", style "line-height" "1rem", hideOnWideScreen, isHiddenWidescreen ] [ text "La temperaturi mai mari de 500°C rezistența stucturilor din oțel se reduce în mod însemnat. Structurile portante își pot pierde funcția lor inițială, astfel încît clădirea se poate prăbuși parțial sau total. Sistemele noastre de vopsele termospumante (pe bază de apă sau solvent) încep să-și facă efectul începând de la 180-200°C, formând pe suprafața oțelului un strat special de spumă care împiedică încălzirea acestuia la temperatura critică." ]
                 , div [] [ img [ src "./illustration_termoprotectie.svg", style "padding-left" "20px" ] [] ]
                 ]
             ]
@@ -792,7 +811,8 @@ sealing =
             [ modalLeftColumn "Etanșarea penetrațiilor din pereți și planșee cu material termospumant"
             , column (centerColumnModifier BM.Width8)
                 [ style "color" "#4d4d4d", style "display" "flex", style "text-align" "left", style "flex-direction" "column", style "line-height" "1.5rem" ]
-                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "3rem", style "width" "70%" ] [ text "Etanșarea penetrațiilor din pereți și planșee cu material termospumant" ]
+                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "3rem", style "width" "70%", hideOnMobile ] [ text "Etanșarea penetrațiilor din pereți și planșee cu material termospumant" ]
+                , div [ style "color" "#DB2E54", style "font-size" "18px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", hideOnWideScreen, isHiddenWidescreen ] [ text "Etanșarea penetrațiilor din pereți și planșee cu material termospumant" ]
                 , sealingType "Etașarea antifoc tip „Combi” a trecerilor de cabluri, țevilor metalice, conductelor din material plastic" "Formarea acestei închideri este asemănătoare cu cea a trecerilor de cabluri. Diferă numai în privința utilizării materialelor care își măresc volumul la căldură, respectiv a eventualelor altor sisteme, cum sunt de exemplu, coliere antifoc, laminate etc., în funcție de conductele care străbat peretele." "./etansare/02_illustration_etansare_combi.svg"
                 , sealingType "Etanșarea trecerilor de conducte din material plastic, cu ajutorul colierelor antifoc" "Colierul antifoc, montat în jurul țevii, oferă o protecție simplă dar eficientă. La scurt timp după izbucnirea focului își mărește volumul în asemenea măsură, încât, datorită umpluturii speciale, va strangula- va tăia- complet țeava din material plastic, formând astfel un obstacol în calea extinderii incendiului." "./etansare/01_illustration_etansare_colier.svg"
                 , sealingType "Etanșarea antifoc a trecerilor de conducte din material plastic – laminate încorporabile" "Asemănător colierelor, acest sistem împiedică propagarea focului prin ștrangularea conductei și umplerea integrală a deschiderii cu un material special." "./etansare/03_illustration_etansare_plastic_laminat.svg"
@@ -805,9 +825,11 @@ sealing =
 sealingType : String -> String -> String -> Html Msg
 sealingType title content imageSrc =
     div []
-        [ div [ style "color" "#DB2E54", style "font-size" "24px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", style "width" "70%" ] [ text title ]
-        , div [ style "margin-bottom" "2rem" ] [ titleLine "#DB2E54" ]
-        , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "16px", style "text-align" "justify", style "width" "60%" ] [ text content ]
+        [ div [ style "color" "#DB2E54", style "font-size" "24px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", style "width" "70%", hideOnMobile ] [ text title ]
+        , div [ style "color" "#DB2E54", style "font-size" "14px", style "font-weight" "bold", style "line-height" "1.0rem", style "margin-bottom" "1rem", hideOnWideScreen, isHiddenWidescreen ] [ text title ]
+        , div [ style "margin-bottom" "2rem", hideOnMobile ] [ titleLine "#DB2E54" ]
+        , div [ style "margin-bottom" "3rem", style "font-size" "16px", style "text-align" "justify", style "width" "60%", hideOnMobile ] [ text content ]
+        , div [ style "margin-bottom" "3rem", style "font-size" "12px", style "text-align" "left", style "line-height" "1.0rem", hideOnWideScreen, isHiddenWidescreen ] [ text content ]
         , div [] [ img [ src imageSrc, style "padding-left" "20px", style "margin-bottom" "5rem" ] [] ]
         ]
 
@@ -820,14 +842,18 @@ metalicDoors model =
             [ modalLeftColumn "Execuție și montaj de uși metalice"
             , column (centerColumnModifier BM.Width8)
                 [ style "color" "#4d4d4d", style "display" "flex", style "text-align" "left", style "flex-direction" "column", style "line-height" "1.5rem" ]
-                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "1rem", style "width" "60%" ] [ text "Execuție și montaj de uși metalice" ]
-                , div [ style "margin-bottom" "1rem", style "width" "45%", style "font-size" "18px" ] [ text "-cu termoizolație" ]
-                , div [ style "margin-bottom" "3rem", style "width" "45%", style "font-size" "18px" ] [ text "-cu plumb împotriva radiațiilor" ]
-                , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "18px", style "text-align" "justify", style "width" "65%" ] [ text "Se asigură transport, montaj, garanție și service." ]
+                [ div [ style "color" "#DB2E54", style "font-size" "42px", style "font-weight" "bold", style "line-height" "2.5rem", style "margin-bottom" "1rem", style "width" "60%", hideOnMobile ] [ text "Execuție și montaj de uși metalice" ]
+                , div [ style "color" "#DB2E54", style "font-size" "18px", style "font-weight" "bold", style "line-height" "1.5rem", style "margin-bottom" "1rem", hideOnWideScreen, isHiddenWidescreen ] [ text "Execuție și montaj de uși metalice" ]
+                , div [ style "margin-bottom" "1rem", style "width" "45%", style "font-size" "18px", hideOnMobile ] [ text "-cu termoizolație" ]
+                , div [ style "font-size" "12px", hideOnWideScreen, isHiddenWidescreen ] [ text "-cu termoizolație" ]
+                , div [ style "margin-bottom" "3rem", style "width" "45%", style "font-size" "18px", hideOnMobile ] [ text "-cu plumb împotriva radiațiilor" ]
+                , div [ style "margin-bottom" "1rem", style "font-size" "12px", hideOnWideScreen, isHiddenWidescreen ] [ text "-cu plumb împotriva radiațiilor" ]
+                , div [ style "width" "80%", style "margin-bottom" "3rem", style "font-size" "18px", style "text-align" "justify", style "width" "65%", hideOnMobile ] [ text "Se asigură transport, montaj, garanție și service." ]
+                , div [ style "margin-bottom" "1rem", style "font-size" "12px", style "text-align" "left", hideOnWideScreen, isHiddenWidescreen ] [ text "Se asigură transport, montaj, garanție și service." ]
                 , div [] [ img [ src "./montaj/illustration_usa.svg", style "padding-left" "20px" ] [] ]
                 ]
             ]
-        , div [] [ imageSlider model ]
+        , div [ style "display" "flex", style "justify-content" "center", hideOnMobile ] [ imageSlider model ]
         ]
 
 
@@ -959,7 +985,7 @@ squareCss =
     , style "font-size" "24px"
     , style "background-color" "#14171F"
     , style "margin-top" "100px"
-    , style "margin-top" "0px"
+    , style "margin-top" "100px"
     , style "padding" "100px"
     ]
 
@@ -975,7 +1001,6 @@ squareCssMobile =
     , style "margin-top" "100px"
     , style "margin-top" "0px"
     , style "padding" "20px"
-    , style "color" "#DB2E54"
     ]
 
 
@@ -1049,7 +1074,7 @@ portofolioText =
 portofolioTextMobile : Html msg
 portofolioTextMobile =
     div
-        [ hideOnWideScreen, isHiddenFullHD, isHiddenWidescreen, style "flex-direction" "column" ]
+        [ hideOnWideScreen, isHiddenWidescreen, style "flex-direction" "column" ]
         [ div squareCssMobile
             [ text "LUCRĂRI DE TERMOPROTECȚIE CU VOPSEA TERMOSPUMANTĂ"
             , div [ style "font-size" "12px", style "margin-top" "2rem", style "color" "#FFFFFF", style "text-align" "left" ]
