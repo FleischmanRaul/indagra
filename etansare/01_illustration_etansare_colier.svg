@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW X8 -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="2.62772in" height="3.11146in" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 337 399"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css">
+   <![CDATA[
+    .str0 {stroke:#AAB0B3;stroke-width:0.890547}
+    .fil10 {fill:none}
+    .fil0 {fill:#BDBFC1}
+    .fil4 {fill:#F9A540}
+    .fil5 {fill:#F89D32}
+    .fil15 {fill:#E74E53}
+    .fil9 {fill:#E28738}
+    .fil1 {fill:#D9D9D9}
+    .fil20 {fill:#D1D1D1}
+    .fil14 {fill:#AD3346}
+    .fil18 {fill:#BFBDBD}
+    .fil2 {fill:#B5BABF}
+    .fil6 {fill:#6A2A36}
+    .fil7 {fill:#AAB0B3}
+    .fil17 {fill:#AAB0B3}
+    .fil3 {fill:#888C8E}
+    .fil16 {fill:#727678}
+    .fil8 {fill:#14171F}
+    .fil11 {fill:#F29441;fill-rule:nonzero}
+    .fil12 {fill:#F29441;fill-rule:nonzero}
+    .fil13 {fill:#E28738;fill-rule:nonzero}
+    .fil19 {fill:#BFBDBD;fill-rule:nonzero}
+   ]]>
+  </style>
+ </defs>
+ <g id="Layer_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <polygon class="fil0" points="78,31 0,67 143,95 208,51 "/>
+  <polygon class="fil1" points="143,95 0,67 30,296 281,388 297,277 "/>
+  <polygon class="fil2" points="297,277 143,95 208,51 337,205 "/>
+  <polygon class="fil3" points="281,388 297,277 337,205 322,306 "/>
+  <polygon class="fil4" points="71,46 95,49 187,65 167,79 72,60 "/>
+  <polygon class="fil5" points="167,79 187,65 325,225 312,248 "/>
+  <circle class="fil6" transform="matrix(0.928779 0.878973 -0.528509 0.558457 60.8561 346.408)" r="47"/>
+  <g>
+   <path class="fil7" d="M122 186c0,-1 0,-1 1,-1l-1 1zm97 85l-13 19 13 -19zm-99 -83c0,-1 0,-1 1,-1 -1,0 -1,0 -1,1zm1 -1c0,-1 0,-1 1,-1 -1,0 -1,0 -1,1zm2 -2c20,-20 55,-18 81,5 27,23 33,60 14,83 -20,22 -58,22 -85,-2 -25,-22 -32,-56 -17,-79l0 0c-2,1 -3,2 -5,4 -1,0 -1,1 -2,1l14 -13c0,0 0,0 0,1zm-7 7c1,-1 1,-1 2,-2 -1,1 -1,1 -2,2zm2 -2c0,-1 0,-1 1,-1 -1,0 -1,0 -1,1zm1 -1c0,-1 0,-1 1,-1 -1,0 -1,0 -1,1z"/>
+  </g>
+  <circle class="fil8" transform="matrix(0.977717 -1.12309 1.34964 1.17494 153.546 247.209)" r="38"/>
+  <polygon class="fil9" points="325,225 312,248 299,353 311,327 "/>
+  <polyline class="fil10 str0" points="16,60 155,87 305,262 "/>
+  <polygon class="fil11" points="72,56 171,76 170,76 72,57 "/>
+  <polygon class="fil12" points="72,52 176,73 175,73 71,53 "/>
+  <polygon class="fil12" points="71,49 180,70 179,71 71,50 "/>
+  <polygon class="fil12" points="71,47 184,67 183,68 71,48 "/>
+  <polygon class="fil13" points="171,76 315,244 315,244 170,76 "/>
+  <polygon class="fil13" points="176,73 318,239 317,240 175,73 "/>
+  <polygon class="fil13" points="180,70 320,235 319,236 179,71 "/>
+  <polygon class="fil13" points="184,67 322,231 322,231 183,68 "/>
+  <polyline class="fil10 str0" points="95,39 197,58 332,214 "/>
+  <path class="fil14" d="M30 294c-5,1 -10,3 -14,6l-2 2c-15,16 -6,48 20,73 26,24 58,31 73,17l4 -6c10,-16 0,-45 -23,-68 -1,-1 -2,-1 -3,-2 -18,-16 -39,-24 -55,-22zm48 19c3,2 5,5 8,7 24,23 33,53 19,68 -14,15 -45,8 -69,-15 -25,-23 -33,-54 -19,-68 4,-5 10,-7 17,-8 13,-1 29,5 44,16z"/>
+  <path class="fil15" d="M29 288l-13 12c4,-3 9,-5 14,-6 16,-2 37,6 55,22 1,1 2,1 3,2 23,23 33,52 23,68l37 -47 25 -31 8 -10 5 -6c3,-4 2,-3 5,-7 1,-1 1,-1 1,-1 1,-1 2,-3 3,-4 1,-2 2,-4 3,-7 1,-3 2,-5 2,-8 1,-2 1,-5 1,-7l-1 -7c0,-3 -1,-6 -2,-9l-2 -6c-1,-3 -3,-6 -6,-10 -2,-3 -4,-6 -7,-9 -1,0 -2,-1 -3,-2 -2,-2 -4,-4 -7,-5 -3,-2 -6,-4 -9,-6 -4,-1 -8,-2 -11,-3 -4,-1 -7,-2 -11,-2 -3,0 -6,1 -9,1 -2,0 -5,1 -7,2 -3,1 -5,2 -7,3 -2,1 -4,3 -6,4 -4,3 -8,8 -12,11l-10 10 -62 58z"/>
+  <path class="fil15" d="M249 100l37 44 10 11 17 -21 0 0 0 0c0,0 0,-1 0,-1 10,-13 6,-33 -9,-46 -15,-13 -34,-14 -46,-4l-14 11 5 6 0 0zm64 34l0 0 0 0 0 0z"/>
+  <path class="fil3" d="M70 34l1 12 25 4c0,-15 -1,-30 -1,-44l-43 -6 0 15 17 2 1 17z"/>
+  <polygon class="fil16" points="27,12 52,15 52,0 "/>
+  <path class="fil1" d="M31 53l0 0 42 7c-1,-14 -1,-29 -2,-43l-19 -2 -25 -3 4 41z"/>
+  <path class="fil8" d="M200 251c1,2 1,5 1,7l15 0c0,-9 -2,-19 -6,-28l-14 6c1,2 2,4 2,6l10 -1 -8 10z"/>
+  <path class="fil8" d="M210 230c4,9 6,19 6,28l1 -9 6 -8 0 -7 2 -3 -5 -1 -3 -7 -7 7z"/>
+  <path class="fil17" d="M218 273c-2,2 -4,3 -5,5 -1,1 -1,1 -2,2 0,2 -1,4 -3,6l11 -15c0,1 -1,1 -1,2z"/>
+  <path class="fil3" d="M99 222l-5 -4c-1,3 -2,7 -3,12l8 -8z"/>
+  <path class="fil3" d="M95 214l7 5 4 -4 -8 -6c-1,2 -2,4 -3,5z"/>
+  <path class="fil3" d="M100 206l9 7c0,0 0,0 0,0 1,-1 2,-2 3,-4l-2 -2 -6 -6c0,1 -1,1 -1,2 -1,1 -2,2 -3,3z"/>
+  <path class="fil3" d="M112 195c-1,1 -3,2 -4,3l-1 1 8 9c1,-1 3,-2 4,-3l-7 -10z"/>
+  <path class="fil3" d="M121 190c-2,1 -5,3 -7,3l8 11c1,-1 3,-2 5,-2l-6 -12z"/>
+  <path class="fil3" d="M131 187c-2,1 -5,1 -7,2l5 12c2,-1 4,-1 6,-1l-4 -13z"/>
+  <path class="fil3" d="M142 186c-2,0 -5,0 -7,1l3 12c2,0 4,0 6,0l-2 -13z"/>
+  <path class="fil3" d="M147 200l-1 -14c2,0 5,1 7,1l0 14c-1,-1 -4,-1 -6,-1z"/>
+  <path class="fil3" d="M164 190c-3,-1 -5,-2 -7,-2l-1 14 6 2 2 -14z"/>
+  <path class="fil3" d="M175 195c-2,-2 -4,-3 -7,-4l-3 14c2,1 4,2 5,3l5 -13z"/>
+  <path class="fil3" d="M178 213c-1,-1 -3,-2 -5,-3l7 -13c2,1 4,3 6,4l-8 12z"/>
+  <path class="fil3" d="M185 220c-1,-2 -3,-3 -4,-4l8 -12c2,2 4,3 6,5l-10 11z"/>
+  <path class="fil3" d="M191 227c-1,-2 -3,-3 -4,-5l11 -10c1,2 3,4 4,6l-11 9z"/>
+  <path class="fil3" d="M196 235c-1,-1 -2,-4 -3,-5l12 -9c1,2 3,5 4,7l-13 7z"/>
+  <path class="fil3" d="M216 258c0,3 0,5 0,8l-15 -2c0,-2 0,-4 0,-6l15 0z"/>
+  <path class="fil3" d="M198 273c1,-2 2,-4 2,-6l15 4c-1,3 -2,5 -3,8l-14 -6z"/>
+  <path class="fil3" d="M194 281c1,-1 2,-3 3,-4l13 7c-1,2 -3,4 -4,5 -4,-2 -8,-5 -12,-8z"/>
+  <path class="fil3" d="M188 289l4 -5 10 9c-1,2 -3,4 -5,5l-9 -9z"/>
+  <path class="fil3" d="M182 296l4 -4 6 9c-2,1 -4,2 -6,3l-4 -8z"/>
+  <path class="fil3" d="M173 308l6 -8 2 6c-3,1 -5,1 -8,2z"/>
+  <line class="fil10" x1="248" y1="255" x2="249" y2= "255" />
+  <line class="fil10" x1="175" y1="174" x2="175" y2= "170" />
+  <path class="fil3" d="M166 156l0 0c0,0 0,0 0,0zm8 18l0 -3 1 -1 3 -2 0 -17 -12 -3 0 8 0 0 0 5 0 2 0 4 3 3 0 2c2,1 4,1 5,2z"/>
+  <circle class="fil18" transform="matrix(0.0970738 -0.0518431 0.0623006 0.116655 169.835 159.196)" r="38"/>
+  <line class="fil10" x1="172" y1="164" x2="173" y2= "163" />
+  <polyline class="fil10" points="178,151 179,151 179,168 178,168 "/>
+  <path class="fil3" d="M237 242l-3 3 -5 -2c0,2 0,4 -1,6l5 1 6 5 16 5 0 -13 -18 -5zm5 11c-2,-2 -1,-4 1,-6 0,0 0,0 0,0l0 0c0,0 0,0 1,-1 0,0 0,0 0,0 2,-1 5,0 6,3 1,2 1,5 -1,6l-1 0c0,1 0,1 0,1 -2,1 -5,0 -6,-3z"/>
+  <polygon class="fil19" points="167,155 167,155 166,156 167,155 "/>
+  <polygon class="fil19" points="173,163 172,164 172,163 173,163 "/>
+  <circle class="fil20" transform="matrix(0.0970738 -0.0518431 0.0623006 0.116655 168.882 159.937)" r="38"/>
+  <circle class="fil18" transform="matrix(0.0980574 -0.0523684 0.0629319 0.117837 246.237 250.681)" r="38"/>
+  <line class="fil10" x1="248" y1="255" x2="249" y2= "255" />
+  <polygon class="fil19" points="244,247 243,247 242,247 244,246 "/>
+  <polygon class="fil19" points="250,254 248,256 249,255 249,254 "/>
+  <circle class="fil20" transform="matrix(0.0980574 -0.0523684 0.0629319 0.117837 245.275 251.429)" r="38"/>
+ </g>
+</svg>
